@@ -12,7 +12,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Use a lightweight base image for the final deployment
-FROM openjdk:17.0.1-jre-slim
+FROM openjdk:17-jdk-slim-buster
 
 # Set the working directory in the container
 WORKDIR /app
