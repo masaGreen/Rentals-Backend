@@ -1,18 +1,20 @@
 
 spring:
-    config:
-        import: file:/Users/INTEL/Desktop/coding/java/spring/Rental-Unit-Management/Rental-Units-Management/src/main/resources/env.properties
     application:
         name: Rental-Unit-Management
     datasource:
         driver-class-name: org.postgresql.Driver
+        password: usT9yCQTKwfdrzGGcvB5iCpz9jPUL2j5
+        username: masa
+        url: jdbc:postgresql://dpg-cke14o4gonuc738sp50g-a.singapore-postgres.render.com/rentals_uvbx
         
     jpa:
         hibernate:
             ddl-auto: update
             dialect: PostgreSQLDialect
         show-sql: true
-
+jwt:
+    secret: ZxAlWGbVUaVVy0RpA7154DpT2nlreIyvdNT17CVuRDx3sTcfwr1Zw1wTTP0tOoeJ
     
 mail:
     originmail: 
