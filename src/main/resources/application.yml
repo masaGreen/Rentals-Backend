@@ -1,0 +1,22 @@
+
+spring:
+    config:
+        import: file:/Users/INTEL/Desktop/coding/java/spring/Rental-Unit-Management/Rental-Units-Management/src/main/resources/env.properties
+    application:
+        name: Rental-Unit-Management
+    datasource:
+        driver-class-name: org.postgresql.Driver
+        
+    jpa:
+        hibernate:
+            ddl-auto: update
+            dialect: PostgreSQLDialect
+        show-sql: true
+
+    
+mail:
+    originmail: 
+
+
+
+
