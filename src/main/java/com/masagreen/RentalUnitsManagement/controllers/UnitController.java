@@ -41,7 +41,6 @@ public class UnitController {
 
         try {
             Unit unitToBeSaved = unitService.saveUnit(unit);
-            System.out.println(unitToBeSaved);
             if (unitToBeSaved  != null) {
                 return new ResponseEntity<>(CommonResponseMessageDto.builder().message("successfully created").build(), HttpStatus.CREATED);
             }else{
