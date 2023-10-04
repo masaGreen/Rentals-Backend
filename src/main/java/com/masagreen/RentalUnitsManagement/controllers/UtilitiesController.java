@@ -26,7 +26,7 @@ import static com.masagreen.RentalUnitsManagement.utils.ProcessDownloadResponse.
 @RequestMapping("/v1/utilities")
 @SecurityRequirement(name = "bearerAuth")
 @Tag(name="utilities&Payments")
-@CrossOrigin(origins = "http://localhost:5173")
+
 public class UtilitiesController {
     @Autowired
     private UtilitiesPaymentsService utilitiesPaymentsService;

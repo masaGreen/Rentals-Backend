@@ -20,7 +20,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/v1/units")
-@CrossOrigin(origins = "http://localhost:5173")
+
 @Tag(name = "units")
 @SecurityRequirement(name = "bearerAuth")
 
