@@ -23,7 +23,7 @@ import java.util.Optional;
 
 @Tag(name = "units")
 @SecurityRequirement(name = "bearerAuth")
-
+@CrossOrigin("http://localhost:5173")
 public class UnitController {
     @Autowired
     private UnitService unitService;

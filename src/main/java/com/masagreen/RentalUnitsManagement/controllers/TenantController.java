@@ -23,7 +23,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/v1/tenants")
-
+@CrossOrigin("http://localhost:5173")
 @SecurityRequirement(name = "bearerAuth")
 @Tag(name="Tenants")
 public class TenantController {

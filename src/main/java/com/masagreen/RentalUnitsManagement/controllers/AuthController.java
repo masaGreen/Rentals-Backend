@@ -27,6 +27,7 @@ import com.masagreen.RentalUnitsManagement.jwt.JwtService;
 import com.masagreen.RentalUnitsManagement.models.AppUser;
 import com.masagreen.RentalUnitsManagement.services.AppUserService;
 import com.masagreen.RentalUnitsManagement.utils.SendMail;
+import org.springframework.web.bind.annotation.*;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
@@ -34,7 +35,7 @@ import jakarta.validation.Valid;
 @RequestMapping("/v1/auth")
 @RestController
 @Tag(name="Authorization")
-
+@CrossOrigin("http://localhost:5173")
 public class AuthController {
 
     @Autowired

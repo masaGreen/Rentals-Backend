@@ -15,6 +15,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.masagreen.RentalUnitsManagement.services.AppUserService;
+// import org.springframework.security.config.annotation.web.configuration.CorsConfigurationSource;
+
 
 @Configuration
 public class AppConfig {
@@ -45,13 +47,13 @@ public class AppConfig {
             throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
-    @Bean
-    CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
-        configuration.setAllowedMethods(Arrays.asList("GET","POST","DELETE","PUT"));
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-}
+//     @Bean
+//     public CorsConfigurationSource corsConfigurationSource() {
+//         CorsConfiguration configuration = new CorsConfiguration();
+//         configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
+//         configuration.setAllowedMethods(Arrays.asList("GET","POST","DELETE","PUT"));
+//         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+//         source.registerCorsConfiguration("/**", configuration);
+//         return source;
+// }
 }
