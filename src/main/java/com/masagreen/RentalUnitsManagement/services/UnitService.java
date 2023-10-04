@@ -21,7 +21,7 @@ public class UnitService {
     public Unit saveUnit(Unit unit) {
 
         Optional<Unit> foundUnit = unitRepository.findByUnitNumber(unit.getUnitNumber());
-        if(foundUnit.isEmpty ){
+        if(foundUnit.isEmpty() ){
              return unitRepository.save(unit);
         }
         return null;
