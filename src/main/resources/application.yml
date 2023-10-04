@@ -1,7 +1,6 @@
-
-spring:
-    server:
+server:
         port: 8080
+spring:
     application:
         name: Rental-Unit-Management
     datasource:
