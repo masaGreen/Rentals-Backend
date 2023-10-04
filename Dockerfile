@@ -8,9 +8,6 @@ WORKDIR /app
 COPY pom.xml .
 COPY src ./src
 
-# Build the application with Maven and skip tests
-RUN mvn clean package -DskipTests
-
 # Use a lightweight base image for the final deployment
 FROM openjdk:17-jdk-slim-buster
 
