@@ -15,12 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.masagreen.RentalUnitsManagement.jwt.JwtFilter;
 import com.masagreen.RentalUnitsManagement.jwt.JwtService;
@@ -51,6 +45,26 @@ public class AuthController {
 
     @Autowired
     private SendMail sendMail;
+
+
+    @SecurityRequirement(name = "bearerAuth")
+    @GetMapping
+    public ResponseEntity<?> fetchAllUsers(){
+        try{
+            List<AppUser> users = appUserService.findAllUsers();
+            List<SignUpResponseDto> usersWithoutPassword = users.stream().map(user -> SignUpResponseDto.builder()
+                    .id((long) user.getId())
+                    .email(user.getEmail())
+                    .role(user.getRole())
+                    .status(user.isStatus())
+                    .build()
+                    ).toList();
+            return new ResponseEntity<>(UsersResponseDto.builder().users(usersWithoutPassword).build(),HttpStatus.OK);
+        }catch (Exception e){
+           
+            return new ResponseEntity<>(CommonResponseMessageDto.builder().message("internal server error").build(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@Valid @RequestBody SignUpReqDto signUpReqDto) {
