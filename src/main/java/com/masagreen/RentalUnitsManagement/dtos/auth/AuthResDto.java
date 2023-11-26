@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class AuthResDto {
-    private int id;
+    private Long id;
     private String email;
     private boolean status;
     private String message;

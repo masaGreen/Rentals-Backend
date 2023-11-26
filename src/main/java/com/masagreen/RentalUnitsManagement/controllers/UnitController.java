@@ -3,146 +3,131 @@ package com.masagreen.RentalUnitsManagement.controllers;
 import com.masagreen.RentalUnitsManagement.dtos.CommonResponseMessageDto;
 import com.masagreen.RentalUnitsManagement.dtos.unit.UnitDataResponseDto;
 import com.masagreen.RentalUnitsManagement.dtos.unit.UnitReqDto;
-import com.masagreen.RentalUnitsManagement.jwt.JwtFilter;
-import com.masagreen.RentalUnitsManagement.models.Unit;
+import com.masagreen.RentalUnitsManagement.models.entities.Unit;
 import com.masagreen.RentalUnitsManagement.services.UnitService;
-import com.masagreen.RentalUnitsManagement.utils.ProcessDownloadResponse;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+
+import java.util.Objects;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Optional;
-
 @RestController
 @RequestMapping("/v1/units")
-
 @Tag(name = "units")
 @SecurityRequirement(name = "bearerAuth")
-@CrossOrigin("http://localhost:5173")
+@RequiredArgsConstructor
 public class UnitController {
-    @Autowired
-    private UnitService unitService;
-    @Autowired
-    private JwtFilter jwtFilter;
-    @PostMapping()
-    public ResponseEntity<?> rentUnit(@RequestBody UnitReqDto unitReqDto){
-        Unit unit = Unit.builder()
-                .plotName(unitReqDto.getPlotName())
-                .unitNumber(unitReqDto.getPlotName()+unitReqDto.getUnitNumber())
-                .tag(unitReqDto.getTag())
-                .status(true)
-                .rent(unitReqDto.getRent())
-                .build();
 
-        try {
-            Unit unitToBeSaved = unitService.saveUnit(unit);
-            if (unitToBeSaved  != null) {
-                return new ResponseEntity<>(CommonResponseMessageDto.builder().message("successfully created").build(), HttpStatus.CREATED);
-            }else{
-                return new ResponseEntity<>(CommonResponseMessageDto.builder().message("unit already exists").build(), HttpStatus.BAD_REQUEST);
-            }
-        } catch (Exception e){
-            e.printStackTrace();
-            return new ResponseEntity<>(CommonResponseMessageDto.builder().message("internal server error").build(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+   private final UnitService unitService;
 
-    }
-    @GetMapping
-    public ResponseEntity<?> getUnits(){
-        try{
-            List<Unit> units = unitService.findAllUnits();
-            return new ResponseEntity<>(UnitDataResponseDto.builder().units(units).build(),HttpStatus.OK);
-        }catch (Exception e){
-            e.printStackTrace();
-            return new ResponseEntity<>(CommonResponseMessageDto.builder().message("internal server error").build(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+   @Operation(summary = " Endpoint to register a unit")
+   @ApiResponses(value = {
+         @ApiResponse(responseCode = "201", description = "unit registered successfully", content = {
+               @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CommonResponseMessageDto.class))) }),
 
-    }
-    @GetMapping("/download/allUnits")
-    public ResponseEntity<?> downloadAllTenants(HttpServletResponse response) {
-        try {
-            List<Unit> units = unitService.findAllUnits();
+         @ApiResponse(responseCode = "409", description = "unit already exists", content = @Content(examples = @ExampleObject(value = "{'message': 'unit already exists'}"))),
 
-            HttpServletResponse httpServletResponse = ProcessDownloadResponse.processResponse(response);
+   })
+   @PostMapping
+   public ResponseEntity<CommonResponseMessageDto> rentUnit(@RequestBody UnitReqDto unitReqDto) {
+      return new ResponseEntity<>(unitService.saveUnit(unitReqDto), HttpStatus.CREATED);
 
-            unitService.generate(httpServletResponse, "AllUnits", units);
+   }
 
-            return new ResponseEntity<>(CommonResponseMessageDto.builder().message("downloading").build(), HttpStatus.OK);
+   @Operation(summary = " Endpoint to fetch all units")
+   @ApiResponses(value = {
+         @ApiResponse(responseCode = "200", description = "fetched units successfully", content = {
+               @Content(mediaType = "application/json", schema = @Schema(implementation = UnitDataResponseDto.class)) }),
 
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseEntity<>(CommonResponseMessageDto.builder().message(e.getMessage()).build(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+   })
+   @GetMapping
+   public ResponseEntity<UnitDataResponseDto> getUnits() {
+      return new ResponseEntity<>(unitService.findAllUnits(), HttpStatus.OK);
 
-    }
-    @GetMapping("/getAvailableUnits")
-    public ResponseEntity<?>  getAvailableUnits(){
-        try{
-            List<Unit> units = unitService.findAllUnits().stream().filter(Unit::isStatus).toList();
+   }
 
-            return new ResponseEntity<>(UnitDataResponseDto.builder().units(units).build(),HttpStatus.OK);
-        }catch (Exception e){
-            e.printStackTrace();
-            return new ResponseEntity<>(CommonResponseMessageDto.builder().message(e.getMessage()).build(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+   @Operation(summary = " Endpoint to download all units")
+   @ApiResponses(value = {
+         @ApiResponse(responseCode = "200", description = "downloaded units successfully", content = {
+               @Content(mediaType = "application/pdf", array = @ArraySchema(schema = @Schema(implementation = byte.class))) }),
 
-    }
-    @GetMapping("/getByUnitNumber/{unitNumber}")
-    public ResponseEntity<?> findByName(@PathVariable("unitNumber") String unitNum){
-        try{
-            Optional<Unit> unit = unitService.findByUnitNumber(unitNum);
-            if(unit.isPresent()) {
-                return new ResponseEntity<>(unit.get(), HttpStatus.OK);
-            }else{
-                return new ResponseEntity<>(CommonResponseMessageDto.builder().message("name doesn't exist").build(), HttpStatus.NOT_FOUND);
-            }
+         @ApiResponse(responseCode = "500", description = "error downloading try later", content = @Content(examples = @ExampleObject(value = "{'message': 'server error try again later'}"))),
 
-        } catch (Exception e){
-            e.printStackTrace();
-            return new ResponseEntity<>(CommonResponseMessageDto.builder().message(e.getMessage()).build(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-    @GetMapping("/updateUnitStatus/{unitNumber}")
-    public ResponseEntity<?> updateAvailability(@PathVariable("unitNumber") String unitNumber){
-        try{
-            Optional<Unit> unit = unitService.findByUnitNumber(unitNumber);
-            if(unit.isPresent()) {
-                Unit unitFound = unit.get();
-               
-                unitFound.setStatus(!(unitFound.isStatus()));
+   })
+   @GetMapping("/download/allUnits")
+   public ResponseEntity<?> downloadAllUnits(HttpServletResponse response) {
+      byte[] fileBytes = unitService.downloadAllUnits(response);
+      if (Objects.isNull(fileBytes)) {
+         return new ResponseEntity<>(CommonResponseMessageDto.builder().message("download error"),
+               HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+      return new ResponseEntity<>(fileBytes, HttpStatus.OK);
 
-               unitService.saveUnit(unitFound);
-               
-                return new ResponseEntity<>(CommonResponseMessageDto.builder().message("status successfully changed").build(), HttpStatus.OK);
-            }else{
-                return new ResponseEntity<>(CommonResponseMessageDto.builder().message("id doesn't exist").build(), HttpStatus.NOT_FOUND);
-            }
+   }
 
-        } catch (Exception e){
-            e.printStackTrace();
-            return new ResponseEntity<>(CommonResponseMessageDto.builder().message(e.getMessage()).build(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+   @Operation(summary = " Endpoint to fetch only available units")
+   @ApiResponses(value = {
+         @ApiResponse(responseCode = "200", description = "fetched available units successfully", content = {
+               @Content(mediaType = "application/json", schema = @Schema(implementation = UnitDataResponseDto.class)) }),
 
-    }
-    @DeleteMapping("/reset/{id}")
-    public ResponseEntity<?>  deleteUnit(@PathVariable("id") String id){
-        try{
-            String res = unitService.deleteUnit(id);
-            if(res==null && jwtFilter.isAdmin()) {
-                return new ResponseEntity<>(CommonResponseMessageDto.builder().message("successfully deleted").build(), HttpStatus.OK);
-            }else{
-                return new ResponseEntity<>(CommonResponseMessageDto.builder().message("id doesn't exist").build(), HttpStatus.FORBIDDEN);
-            }
+   })
+   @GetMapping("/getAvailableUnits")
+   public ResponseEntity<UnitDataResponseDto> getAvailableUnits() {
+      return new ResponseEntity<>(unitService.getAvailableUnits(), HttpStatus.OK);
 
-        } catch (Exception e){
-            e.printStackTrace();
-            return new ResponseEntity<>(CommonResponseMessageDto.builder().message(e.getMessage()).build(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
+   }
+
+   @Operation(summary = " Endpoint to fetch a unit by unitNumber")
+   @ApiResponses(value = {
+         @ApiResponse(responseCode = "200", description = "fetched unit  successfully", content = {
+               @Content(mediaType = "application/json", schema = @Schema(implementation = Unit.class)) }),
+
+         @ApiResponse(responseCode = "404", description = "unit not found", content = @Content(examples = @ExampleObject(value = "{'message': 'unit not found'}"))),
+
+   })
+   @GetMapping("/getByUnitNumber/{unitNumber}")
+   public ResponseEntity<Unit> findByName(@PathVariable("unitNumber") String unitNum) {
+      return new ResponseEntity<>(unitService.getByUnitNumber(unitNum), HttpStatus.OK);
+   }
+
+   @Operation(summary = " Endpoint to update unit's availabilty status  by unitNumber")
+   @ApiResponses(value = {
+         @ApiResponse(responseCode = "202", description = "updated status successfully", content = {
+               @Content(mediaType = "application/json", schema = @Schema(implementation = CommonResponseMessageDto.class)) }),
+
+         @ApiResponse(responseCode = "404", description = "unit not found", content = @Content(examples = @ExampleObject(value = "{'message': 'unit not found'}"))),
+
+   })
+   @GetMapping("/updateUnitStatus/{unitNumber}")
+   public ResponseEntity<CommonResponseMessageDto> updateAvailability(@PathVariable("unitNumber") String unitNumber) {
+
+      return new ResponseEntity<>(unitService.updateAvailability(unitNumber), HttpStatus.ACCEPTED);
+   }
+
+   @Operation(summary = " Endpoint to delete a unit by id")
+   @ApiResponses(value = {
+         @ApiResponse(responseCode = "200", description = "deleted unit  successfully", content = {
+               @Content(mediaType = "application/json", schema = @Schema(implementation = CommonResponseMessageDto.class)) }),
+
+         @ApiResponse(responseCode = "404", description = "unit not found", content = @Content(examples = @ExampleObject(value = "{'message': 'unit not found'}"))),
+
+   })
+   @DeleteMapping("/deleteUnit/{id}")
+   public ResponseEntity<CommonResponseMessageDto> deleteUnit(@PathVariable("id") String id) {
+      return new ResponseEntity<>(unitService.deleteUnit(id), HttpStatus.OK);
+   }
 
 }

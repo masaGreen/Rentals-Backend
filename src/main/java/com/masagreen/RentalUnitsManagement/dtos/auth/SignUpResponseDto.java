@@ -11,14 +11,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class SignUpResponseDto {
-    private Long id;
+    private String id;
     
     private String email;
    
-    private String password;
-    
-    private boolean  status;
-    
-    private String role;
 }
 

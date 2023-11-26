@@ -1,6 +1,6 @@
 package com.masagreen.RentalUnitsManagement.dtos.tenant;
 
-import com.masagreen.RentalUnitsManagement.models.Tenant;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,5 +13,5 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TenantsResponseDto {
-    private List<Tenant> tenants;
+    private List<TenantDTO> tenants;
 }

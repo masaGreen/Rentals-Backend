@@ -5,35 +5,134 @@ import com.lowagie.text.pdf.CMYKColor;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
-import com.masagreen.RentalUnitsManagement.models.Unit;
+import com.masagreen.RentalUnitsManagement.dtos.CommonResponseMessageDto;
+import com.masagreen.RentalUnitsManagement.dtos.unit.UnitDataResponseDto;
+import com.masagreen.RentalUnitsManagement.dtos.unit.UnitReqDto;
+import com.masagreen.RentalUnitsManagement.exceptions.DeletionNotAllowedCurrentlyException;
+import com.masagreen.RentalUnitsManagement.models.entities.Unit;
 import com.masagreen.RentalUnitsManagement.repositories.UnitRepository;
+import com.masagreen.RentalUnitsManagement.utils.ProcessDownloadResponse;
+
+import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
-@Service
-public class UnitService {
-    @Autowired
-    private UnitRepository unitRepository;
-    public Unit saveUnit(Unit unit) {
+import java.util.Objects;
 
-        Optional<Unit> foundUnit = unitRepository.findByUnitNumber(unit.getUnitNumber());
-        if(foundUnit.isEmpty() ){
-             return unitRepository.save(unit);
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class UnitService {
+
+    private final UnitRepository unitRepository;
+    public CommonResponseMessageDto saveUnit(UnitReqDto unitReqDto) {
+        //check if already exists
+        Boolean isExistent = unitRepository.existsByUnitNumber(unitReqDto.unitNumber());
+        if(isExistent) {
+            throw new EntityExistsException("unit already exists");
+        }else{
+            Unit unit = Unit.builder()
+                .plotName(unitReqDto.plotName())
+                .unitNumber(unitReqDto.plotName()+unitReqDto.unitNumber())
+                .tag(unitReqDto.tag())
+                .status(true)
+                .rent(unitReqDto.rent())
+                .build();
+            unitRepository.save(unit);
+            return CommonResponseMessageDto.builder().message("unit successfully created").build();
         }
-        return null;
+            
 
     }
-    public void generate(HttpServletResponse res, String title, List<Unit> units) throws DocumentException, IOException {
+
+
+    public byte[] downloadAllUnits(HttpServletResponse response){
+       
+        List<Unit> units = unitRepository.findAll();
+        
+
+        ProcessDownloadResponse.processResponse(response);
+       
+        try {
+            log.info("preparing pdf for all units");
+            return generate("All Units", units);
+            
+            
+        } catch (DocumentException | IOException e) {
+            log.error("error processing units download {}", e.getCause());
+            return null;
+        }
+
+   }
+    public UnitDataResponseDto getAvailableUnits(){
+        
+        List<Unit> units = unitRepository.findAllUnitsAvailable();
+
+        return UnitDataResponseDto.builder().units(units).build(); 
+      
+       
+    }
+
+    public Unit getByUnitNumber(String id){
+       Unit unit = unitRepository.findById(id).orElseThrow(
+            ()->new EntityNotFoundException("unit not found")
+            );
+        return unit;
+
+    }
+
+    public CommonResponseMessageDto updateAvailability(String unitNumber){
+        Unit unit = unitRepository.findByUnitNumber(unitNumber).orElseThrow(
+            ()->new EntityNotFoundException("unit not found")
+            );
+            
+        unit.setStatus(!(unit.isStatus()));
+
+        unitRepository.save(unit);
+        
+        return CommonResponseMessageDto.builder().message("status successfully changed").build();
+            
+    }
+     public UnitDataResponseDto findAllUnits() {
+                
+        List<Unit> units = unitRepository.findAll();
+        return UnitDataResponseDto.builder().units(units).build();
+       
+    }
+
+    public CommonResponseMessageDto deleteUnit(String id) {
+
+        Unit unit = unitRepository.findById(id).orElseThrow(()->new EntityNotFoundException("unit by id: "+ id + "does not exist"));
+        
+        if(unit.isStatus()){
+             unitRepository.deleteById(id);
+             return CommonResponseMessageDto.builder().message("deleted successfully").build();
+
+        }else{
+            throw new DeletionNotAllowedCurrentlyException("can't delete occupied unit, delete tenant first");
+        }
+       
+        
+        
+    }
+    private byte[] generate( String title, List<Unit> units) throws DocumentException, IOException {
 
 
         Document document = new Document(PageSize.A4);
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
+        // Create a PdfWriter to write the document to the ByteArrayOutputStream
+        
 
-        PdfWriter.getInstance(document, res.getOutputStream());
+        PdfWriter writer = PdfWriter.getInstance(document, byteArrayOutputStream);
 
         document.open();
 
@@ -73,7 +172,7 @@ public class UnitService {
         table.addCell(cell);
         cell.setPhrase(new Phrase("Rent(Ksh)", font));
         table.addCell(cell);
-        cell.setPhrase(new Phrase("IsOccupied", font));
+        cell.setPhrase(new Phrase("Is_available", font));
         table.addCell(cell);
 
 
@@ -89,30 +188,19 @@ public class UnitService {
         }
 
         document.add(table);
+
+        
         document.close();
-    }
-    public Optional<Unit> findByUnitNumber(String unitNumber){
-        return  unitRepository.findByUnitNumber(unitNumber);
-    }
+        writer.close();
+        return byteArrayOutputStream.toByteArray();
 
-    public List<Unit> findAllUnits() {
-       
-        return unitRepository.findAll();
     }
+  
+    
 
-    public String deleteUnit(String id) {
-        System.out.println(id+">>>>>>>>");
-       Optional<Unit> unit = unitRepository.findById(Long.parseLong(id));
-       if (unit.isPresent()){
-         unitRepository.deleteById(Long.parseLong(id));
-         return null;
-       }
-       return "unit id doesn't exist";
-    }
+   
 
-    public Optional<Unit> getSingleUnit(String id) throws NumberFormatException {
-        return unitRepository.findById(Long.parseLong(id));
-    }
+    
 
 
 }

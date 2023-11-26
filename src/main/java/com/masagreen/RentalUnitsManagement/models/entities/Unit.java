@@ -1,21 +1,24 @@
-package com.masagreen.RentalUnitsManagement.models;
+package com.masagreen.RentalUnitsManagement.models.entities;
+
+
+import com.masagreen.RentalUnitsManagement.models.SuperClass;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 @Builder
 @Table(name="units")
-public class Unit {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+public class Unit extends SuperClass{
+    
     @Column(name="plotname")
     private String plotName;
     @Column(name="unitnumber")
@@ -23,4 +26,7 @@ public class Unit {
     private  String tag;
     private boolean status;
     private int rent;
+
+
+    
 }

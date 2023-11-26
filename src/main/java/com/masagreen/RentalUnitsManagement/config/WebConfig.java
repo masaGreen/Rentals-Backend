@@ -1,6 +1,7 @@
 package com.masagreen.RentalUnitsManagement.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -8,10 +9,14 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
+import com.masagreen.RentalUnitsManagement.jwt.JwtAuthenticationEntryPoint;
+// import com.masagreen.RentalUnitsManagement.jwt.JwtAuthenticationEntryPoint;
 import com.masagreen.RentalUnitsManagement.jwt.JwtFilter;
 
 @EnableWebSecurity
@@ -24,25 +29,40 @@ public class WebConfig {
             "swagger-ui/**",
             "/v3/api-docs/**"
             };
+@Autowired
+private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+@Autowired
+    @Qualifier("handlerExceptionResolver")
+    public HandlerExceptionResolver handlerExceptionResolver;
+
 
     @Autowired
     private AuthenticationProvider authenticationProvider;
-    @Autowired
-    private JwtFilter jwtFilter;
+
+
+    @Bean
+    public JwtFilter jwtFilter(){
+        return new JwtFilter(handlerExceptionResolver);
+    }
 
      @Bean
       public SecurityFilterChain securityFilterChain1(HttpSecurity http) throws Exception {
         http
+                .cors(Customizer.withDefaults())
+                .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.disable())
                 .authorizeHttpRequests(auth -> {
-                    auth.anyRequest().permitAll()
+
+                    auth.requestMatchers(allowedList).permitAll();
+                    auth.anyRequest().authenticated();
                             ;
 
                 })
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                .exceptionHandling(exceptionHandling->exceptionHandling.authenticationEntryPoint(jwtAuthenticationEntryPoint))
+               
+                .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
 
     }

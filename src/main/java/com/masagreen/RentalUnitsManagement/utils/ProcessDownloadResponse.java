@@ -1,7 +1,6 @@
 package com.masagreen.RentalUnitsManagement.utils;
 
 
-
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -23,5 +22,19 @@ public class ProcessDownloadResponse {
         response.setHeader(headerKey, headerValue);
         return response;
     }
+    // public static byte[] convertPdfToByteArray(File pdfFile) throws IOException {
+    //     try (FileInputStream fis = new FileInputStream(pdfFile);
+    //          ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+
+    //         byte[] buffer = new byte[1024];
+    //         int bytesRead;
+
+    //         while ((bytesRead = fis.read(buffer)) != -1) {
+    //             bos.write(buffer, 0, bytesRead);
+    //         }
+
+    //         return bos.toByteArray();
+    //     }
+    // }
 
 }

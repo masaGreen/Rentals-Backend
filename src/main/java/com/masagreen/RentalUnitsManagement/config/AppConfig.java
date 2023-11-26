@@ -1,7 +1,5 @@
 package com.masagreen.RentalUnitsManagement.config;
 
-import java.util.Arrays;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,15 +12,13 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.masagreen.RentalUnitsManagement.services.AppUserService;
-// import org.springframework.security.config.annotation.web.configuration.CorsConfigurationSource;
-
+import com.masagreen.RentalUnitsManagement.services.CustomSecurityService;
 
 @Configuration
 public class AppConfig {
 
     @Autowired
-    private AppUserService appUserService;
+    private CustomSecurityService customSecurityService;
 
     @Bean
     public JavaMailSender javaMailSender() {
@@ -37,7 +33,7 @@ public class AppConfig {
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider auth = new DaoAuthenticationProvider();
-        auth.setUserDetailsService(appUserService);
+        auth.setUserDetailsService(customSecurityService);
         auth.setPasswordEncoder(passwordEncoder());
         return auth;
     }
@@ -47,13 +43,5 @@ public class AppConfig {
             throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
-//     @Bean
-//     public CorsConfigurationSource corsConfigurationSource() {
-//         CorsConfiguration configuration = new CorsConfiguration();
-//         configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
-//         configuration.setAllowedMethods(Arrays.asList("GET","POST","DELETE","PUT"));
-//         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-//         source.registerCorsConfiguration("/**", configuration);
-//         return source;
-// }
+
 }

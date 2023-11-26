@@ -23,14 +23,14 @@ import org.springframework.context.annotation.Configuration;
 
 
 )
-@SecurityScheme(
-        name = "bearerAuth",
-        description = "enter the jwt token",
-        scheme = "bearer",
-        type = SecuritySchemeType.HTTP,
-        bearerFormat = "JWT",
-        in = SecuritySchemeIn.HEADER
-)
+// @SecurityScheme(
+//         name = "bearerAuth",
+//         description = "enter the jwt token",
+//         scheme = "bearer",
+//         type = SecuritySchemeType.HTTP,
+//         bearerFormat = "JWT",
+//         in = SecuritySchemeIn.HEADER
+// )
 @Configuration
 class SwaggerConfig {
 

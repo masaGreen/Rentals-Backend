@@ -2,170 +2,168 @@ package com.masagreen.RentalUnitsManagement.controllers;
 
 import com.masagreen.RentalUnitsManagement.dtos.CommonResponseMessageDto;
 import com.masagreen.RentalUnitsManagement.dtos.tenant.StatusUpdateReqDto;
+import com.masagreen.RentalUnitsManagement.dtos.tenant.TenantDTO;
 import com.masagreen.RentalUnitsManagement.dtos.tenant.TenantReqDto;
 import com.masagreen.RentalUnitsManagement.dtos.tenant.TenantsResponseDto;
-import com.masagreen.RentalUnitsManagement.jwt.JwtFilter;
-import com.masagreen.RentalUnitsManagement.models.Tenant;
 import com.masagreen.RentalUnitsManagement.services.TenantService;
-import com.masagreen.RentalUnitsManagement.utils.ProcessDownloadResponse;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+
+import java.util.Objects;
+
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Optional;
-
 @RestController
 @RequestMapping("/v1/tenants")
-@CrossOrigin("http://localhost:5173")
-@SecurityRequirement(name = "bearerAuth")
-@Tag(name="Tenants")
+@Tag(name = "Tenants")
+@RequiredArgsConstructor
 public class TenantController {
-    @Autowired
-    private TenantService tenantService;
-    @Autowired
-    private JwtFilter jwtFilter;
 
-    @GetMapping(  produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getAllTenants(){
-        
-        try{
-            
-            return new ResponseEntity<>(TenantsResponseDto.builder().tenants(
-                    tenantService.findAllTenants()).build(), HttpStatus.OK
-            );
-        } catch (Exception e){
-            e.printStackTrace();
-            return new ResponseEntity<>(CommonResponseMessageDto.builder().message(e.getMessage()).build(), HttpStatusCode.valueOf(500));
+        private final TenantService tenantService;
+
+        @Operation(summary = " Endpoint to fetch all tenants")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "fetched tenants successfully", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = TenantsResponseDto.class)) }),
+
+        })
+        @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+        public ResponseEntity<TenantsResponseDto> getAllTenants() {
+
+                return new ResponseEntity<>(tenantService.findAllTenants(), HttpStatus.OK);
+
         }
-       
-    }
-    @GetMapping("/download/allTenants")
-    public ResponseEntity<?> downloadAllTenants(HttpServletResponse response) {
-        try {
-            List<Tenant> tenants = tenantService.findAllTenants();
 
-            HttpServletResponse httpServletResponse = ProcessDownloadResponse.processResponse(response);
+        @Operation(summary = " Endpoint to download all tenants")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "downloaded tenants successfully", content = {
+                                        @Content(mediaType = "application/pdf", array = @ArraySchema(schema = @Schema(implementation = byte.class))) }),
 
-            tenantService.generate(httpServletResponse, "AllTenants", tenants);
+                        @ApiResponse(responseCode = "500", description = "error downloading try later", content = @Content(examples = @ExampleObject(value = "{'message': 'server error try again later'}"))),
 
-            return new ResponseEntity<>(CommonResponseMessageDto.builder().message("downloading").build(), HttpStatus.OK);
+        })
+        @GetMapping("/download/allTenants")
+        public ResponseEntity<?> downloadAllTenants(HttpServletResponse response) {
 
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseEntity<>(CommonResponseMessageDto.builder().message(e.getMessage()).build(), HttpStatus.INTERNAL_SERVER_ERROR);
+                byte[] fileBytes = tenantService.downloadAllTenants(response);
+                if (Objects.isNull(fileBytes)) {
+                        return new ResponseEntity<>(CommonResponseMessageDto.builder().message("download error"),
+                                        HttpStatus.INTERNAL_SERVER_ERROR);
+                }
+                return new ResponseEntity<>(fileBytes, HttpStatus.OK);
+
         }
-       
-    }
-    @GetMapping("/download/allTenantsWithArrears")
-    public ResponseEntity<?> downloadAllTenantsWithArrears(HttpServletResponse response) {
-        try {
-            List<Tenant> tenants = tenantService.findAllTenants();
-            List<Tenant> list = tenants.stream()
-                            .filter(tenant->"unpaid".equalsIgnoreCase(tenant.getPayStatus()))
-                            .toList();
 
-            HttpServletResponse httpServletResponse = ProcessDownloadResponse.processResponse(response);
+        @Operation(summary = " Endpoint to download all tenants with arrears")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "downloaded tenants with arrears successfully", content = {
+                                        @Content(mediaType = "application/pdf", array = @ArraySchema(schema = @Schema(implementation = byte.class))) }),
 
-            tenantService.generate(httpServletResponse, "AllTenantsWithArrears", list);
+                        @ApiResponse(responseCode = "500", description = "error downloading try later", content = @Content(examples = @ExampleObject(value = "{'message': 'server error try again later'}"))),
 
-            return new ResponseEntity<>(CommonResponseMessageDto.builder().message("downloading").build(), HttpStatus.INTERNAL_SERVER_ERROR);
+        })
+        @GetMapping("/download/allTenantsWithArrears")
+        public ResponseEntity<?> downloadAllTenantsWithArrears(HttpServletResponse response) {
 
-        } catch (Exception e) {
-            e.printStackTrace();
-              return new ResponseEntity<>(CommonResponseMessageDto.builder().message(e.getMessage()).build(), HttpStatus.INTERNAL_SERVER_ERROR);
+                byte[] fileBytes = tenantService.handleAllTenantsWithArrearsDownloads(response);
+                if (Objects.isNull(fileBytes)) {
+                        return new ResponseEntity<>(CommonResponseMessageDto.builder().message("download error"),
+                                        HttpStatus.INTERNAL_SERVER_ERROR);
+                }
+                return new ResponseEntity<>(fileBytes, HttpStatus.OK);
+
         }
-      
-    }
-    @GetMapping("/withArrears")
-    public ResponseEntity<?> getAllTenantsWithArrears(){
-        try{
-            return new ResponseEntity<>(TenantsResponseDto.builder().tenants(
-                    tenantService.findAllTenants().stream()
-                            .filter(tenant->"unpaid".equalsIgnoreCase(tenant.getPayStatus()))
-                            .toList()).build()
-                    , HttpStatus.OK
-            );
-        } catch (Exception e){
-            e.printStackTrace();
-             return new ResponseEntity<>(CommonResponseMessageDto.builder().message(e.getMessage()).build(), HttpStatus.INTERNAL_SERVER_ERROR);
+
+        @Operation(summary = " Endpoint to fetch all tenants with arrears")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "fetched tenants with arrears successfully", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = TenantsResponseDto.class)) }),
+
+        })
+        @GetMapping("/withArrears")
+        public ResponseEntity<TenantsResponseDto> getAllTenantsWithArrears() {
+
+                return new ResponseEntity<>(tenantService.getAllTenantsWithArrears(), HttpStatus.OK);
+
         }
-        
 
-    }
-    @PostMapping
-    public ResponseEntity<?> registerTenant(@RequestBody TenantReqDto tenantReqDto){
+        @Operation(summary = " Endpoint to register a tenant")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "tenant fetched successfully", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = CommonResponseMessageDto.class)) }),
 
-           try {
-               Tenant tenant = tenantService.saveTenant(tenantReqDto);
-               if (tenant != null) {
-                   return new ResponseEntity<>(CommonResponseMessageDto.builder().message("success").build(), HttpStatus.CREATED);
-               } else {
-                   return new ResponseEntity<>(CommonResponseMessageDto.builder().message("unit already occupied/doesn't exist").build(), HttpStatus.BAD_REQUEST);
-               }
-           }catch (Exception e){
-               e.printStackTrace();
-               return new ResponseEntity<>(CommonResponseMessageDto.builder().message(e.getMessage()).build(), HttpStatus.INTERNAL_SERVER_ERROR);
-           }
-          
-    }
-    @DeleteMapping("/deleteTenant/{id}")
-    public ResponseEntity<?>  deleteTenant(@PathVariable("id") String id){
-        try{
-            String res = tenantService.deleteTenant(id);
-            if(res==null && jwtFilter.isAdmin()) {
-                return new ResponseEntity<>(CommonResponseMessageDto.builder().message("successfully deleted").build(), HttpStatus.OK);
-            }else{
-                return new ResponseEntity<>(CommonResponseMessageDto.builder().message("id doesn't exist / unauthorized").build(), HttpStatus.FORBIDDEN);
-            }
+                        @ApiResponse(responseCode = "409", description = "tenant exists or unit unavailable", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = CommonResponseMessageDto.class)) })
 
-        } catch (Exception e){
-            e.printStackTrace();
-           return new ResponseEntity<>(CommonResponseMessageDto.builder().message(e.getMessage()).build(), HttpStatus.INTERNAL_SERVER_ERROR);
+        })
+        @PostMapping
+        public ResponseEntity<CommonResponseMessageDto> registerTenant(@RequestBody TenantReqDto tenantReqDto) {
+
+                if (tenantService.saveTenant(tenantReqDto).equals("saved")) {
+                        return new ResponseEntity<>(
+                                        CommonResponseMessageDto.builder().message("saved successfully").build(),
+                                        HttpStatus.OK);
+                }
+
+                return new ResponseEntity<>(CommonResponseMessageDto.builder()
+                                .message("not saved, unit assigned or tenantd exists").build(), HttpStatus.BAD_REQUEST);
+
         }
-    }
-        
 
-    @GetMapping("/getByPhone/{phone}")
-    public ResponseEntity<?> findByPhone(@PathVariable("phone") String phone){
+        @Operation(summary = " Endpoint to delete a tenant")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "deleted tenant  successfully", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = TenantsResponseDto.class)) }),
 
-        try{
-            Optional<Tenant> tenant = tenantService.findByPhone(phone);
-            if(tenant.isPresent()) {
-                return new ResponseEntity<>(tenant, HttpStatus.OK);
-            }else{
-                return new ResponseEntity<>(CommonResponseMessageDto.builder().message("phone doesn't exist").build(), HttpStatus.NOT_FOUND);
-            }
+                        @ApiResponse(responseCode = "404", description = "tenant not found", content = @Content(examples = @ExampleObject(value = "{'message': 'tenant not found'}"))),
 
-        } catch (Exception e){
-            e.printStackTrace();
-            return new ResponseEntity<>(CommonResponseMessageDto.builder().message(e.getMessage()).build(), HttpStatus.INTERNAL_SERVER_ERROR);
+        })
+        @DeleteMapping("/deleteTenant/{id}")
+        public ResponseEntity<?> deleteTenant(@PathVariable("id") String id) {
+                return new ResponseEntity<>(tenantService.deleteTenant(id), HttpStatus.OK);
         }
-        }
-        
-    @PostMapping("/updatePaymentStatus")
-    public ResponseEntity<?> updatePaymentStatus(@RequestBody StatusUpdateReqDto statusUpdateReqDto){
-        try{
-            Optional<Tenant> tenant = tenantService.findByPhone(statusUpdateReqDto.getPhone());
-            if(tenant.isPresent() && jwtFilter.isAdmin()) {
-                tenant.get().setPayStatus(statusUpdateReqDto.getPayStatus());
-                tenantService.saveTenant(tenant.get());
-                return new ResponseEntity<>(tenant, HttpStatus.OK);
-            }else{
-                return new ResponseEntity<>(CommonResponseMessageDto.builder().message("id doesn't exist or Unauthorized").build(), HttpStatus.FORBIDDEN);
-            }
 
-        } catch (Exception e){
-            e.printStackTrace();
-            return new ResponseEntity<>(CommonResponseMessageDto.builder().message(e.getMessage()).build(), HttpStatus.INTERNAL_SERVER_ERROR);
+        @Operation(summary = " Endpoint tfetch a tenant by his phone")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "fetched tenant successfully", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = TenantDTO.class)) }),
+
+                        @ApiResponse(responseCode = "404", description = "not found", content = @Content(examples = @ExampleObject(value = "{'message': 'tenant not found'}"))),
+
+        })
+        @GetMapping("/getByPhone/{phone}")
+        public ResponseEntity<TenantDTO> findByPhone(@PathVariable("phone") String phone) {
+
+                return new ResponseEntity<>(tenantService.getByPhone(phone), HttpStatus.OK);
+
         }
-        
-    }
+
+        @Operation(summary = " Endpoint to update payment status")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "202", description = "payment updated successfully", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = CommonResponseMessageDto.class)) }),
+
+                        @ApiResponse(responseCode = "404", description = "tenant to update not found", content = @Content(examples = @ExampleObject(value = "{'message': 'tenant to update not found'}"))),
+
+        })
+        @PostMapping("/updatePaymentStatus")
+        public ResponseEntity<CommonResponseMessageDto> updatePaymentStatus(
+                        @RequestBody StatusUpdateReqDto statusUpdateReqDto) {
+
+                return new ResponseEntity<>(tenantService.updatePaymentStatus(statusUpdateReqDto), HttpStatus.ACCEPTED);
+
+        }
 
 }

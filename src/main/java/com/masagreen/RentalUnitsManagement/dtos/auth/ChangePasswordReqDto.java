@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ChnagePasswordReqDto {
+public class ChangePasswordReqDto {
     @Size(min=4, message="must be longer than four characters")
     private String oldPassword;
     @Size(min=4, message="must be longer than four characters")

@@ -1,16 +1,20 @@
 package com.masagreen.RentalUnitsManagement.dtos.auth;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
-@Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UsersResponseDto {
-    private List<UserDTO> users;
+@Builder
+@Data
+public class LoginResponseDTO {
+    private String email;
+    private boolean status;
+    private String token;
+    private String role;
+    private String id;
 }
+
+
+

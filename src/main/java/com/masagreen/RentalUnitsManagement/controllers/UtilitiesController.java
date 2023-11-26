@@ -3,11 +3,15 @@ package com.masagreen.RentalUnitsManagement.controllers;
 import com.masagreen.RentalUnitsManagement.dtos.CommonResponseMessageDto;
 import com.masagreen.RentalUnitsManagement.dtos.utils.UtilsReqDto;
 import com.masagreen.RentalUnitsManagement.dtos.utils.UtilsResDto;
-import com.masagreen.RentalUnitsManagement.models.Unit;
-import com.masagreen.RentalUnitsManagement.models.UtilitiesPayments;
-import com.masagreen.RentalUnitsManagement.services.UnitService;
 import com.masagreen.RentalUnitsManagement.services.UtilitiesPaymentsService;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,188 +19,133 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import static com.masagreen.RentalUnitsManagement.utils.ProcessDownloadResponse.processResponse;
-
 @RestController
 @RequestMapping("/v1/utilities")
-@SecurityRequirement(name = "bearerAuth")
-@Tag(name="utilities&Payments")
-@CrossOrigin("http://localhost:5173")
+@Tag(name = "utilities-Payments")
 public class UtilitiesController {
     @Autowired
     private UtilitiesPaymentsService utilitiesPaymentsService;
-    @Autowired
-    private UnitService unitService;
 
+    @Operation(summary = " Endpoint to register a Util-payment")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "util-payment registered successfully", content = {
+                    @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CommonResponseMessageDto.class))) }),
+
+    })
     @PostMapping()
-    public ResponseEntity<?> saveUtilityPayment(@RequestBody UtilsReqDto utilsReqDto){
+    public ResponseEntity<CommonResponseMessageDto> saveUtilityPayment(@RequestBody UtilsReqDto utilsReqDto) {
 
-        UtilitiesPayments utilitiesPayments = processSaveUtilitiesPayment(utilsReqDto);
-        try {
-            UtilitiesPayments utilitiesPayment = utilitiesPaymentsService.saveUtilitiesPayments(utilitiesPayments);
-            if (utilitiesPayment != null) {
-
-                return new ResponseEntity<>(CommonResponseMessageDto.builder().message("successfully created").build(), HttpStatus.CREATED);
-            }else{
-                return new ResponseEntity<>(CommonResponseMessageDto.builder().message("can't create utilities payments for non-existent unit").build(), HttpStatus.BAD_REQUEST);
-            }
-        } catch (Exception e){
-            e.printStackTrace();
-            return new ResponseEntity<>(CommonResponseMessageDto.builder().message(e.getMessage()).build(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        return new ResponseEntity<>(utilitiesPaymentsService.saveUtilitiesPayments(utilsReqDto), HttpStatus.CREATED);
 
     }
+
+    @Operation(summary = " Endpoint to download all UtilitiesPayments")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "downloaded UtilitiesPayments successfully", content = {
+                    @Content(mediaType = "application/pdf", array = @ArraySchema(schema = @Schema(implementation = byte.class))) }),
+
+            @ApiResponse(responseCode = "500", description = "error downloading try later", content = @Content(examples = @ExampleObject(value = "{'message': 'server error try again later'}"))),
+
+    })
     @GetMapping("/download/allUtilPayments")
-    public ResponseEntity<?> downloadAllUtilsPayments(HttpServletResponse response) {
-        try {
-            List<UtilitiesPayments> allUtils = utilitiesPaymentsService.getAllUtils();
-            for(UtilitiesPayments utilitiesPayments:allUtils){
-                System.out.println(utilitiesPayments.getId());
-            }
-            HttpServletResponse httpServletResponse = processResponse(response);
-
-            utilitiesPaymentsService.generate(httpServletResponse, "AllUtilitiesPayments", allUtils);
-
-            return new ResponseEntity<>(CommonResponseMessageDto.builder().message("successfully created").build(), HttpStatus.OK);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseEntity<>(CommonResponseMessageDto.builder().message(e.getMessage()).build(),HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<byte[]> downloadAllUtilsPayments(HttpServletResponse response) {
+        return new ResponseEntity<>(utilitiesPaymentsService.handleAllUtilsDownloads(response), HttpStatus.OK);
     }
+
+    @Operation(summary = " Endpoint to download all UtilitiesPayments with pending bills")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "downloaded UtilitiesPayments with pending bills successfully", content = {
+                    @Content(mediaType = "application/pdf", array = @ArraySchema(schema = @Schema(implementation = byte.class))) }),
+
+            @ApiResponse(responseCode = "500", description = "error downloading try later", content = @Content(examples = @ExampleObject(value = "{'message': 'server error try again later'}"))),
+
+    })
     @GetMapping("/download/allUtilPaymentsWithPendingBills")
-    public ResponseEntity<?> downloadAllUtilsPaymentsWithPendingBills(HttpServletResponse response) {
-        try {
-            List<UtilitiesPayments> allUtils = utilitiesPaymentsService.getAllUtils()
-                    .stream()
-                    .filter(util->"unpaid".equalsIgnoreCase(util.getStatus()))
-                    .collect(Collectors.toList());
+    public ResponseEntity<byte[]> downloadAllUtilsWithPendingBills(HttpServletResponse response) {
 
-            HttpServletResponse httpServletResponse = processResponse(response);
-
-           utilitiesPaymentsService.generate(httpServletResponse, "AllUtilitiesPayments", allUtils);
-
-            return new ResponseEntity<>(CommonResponseMessageDto.builder().message("downloading").build(), HttpStatus.OK);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseEntity<>(CommonResponseMessageDto.builder().message(e.getMessage()).build(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
+        return new ResponseEntity<>(utilitiesPaymentsService.handleUtilsWithPendingBills(response), HttpStatus.OK);
     }
+
+    @Operation(summary = " Endpoint to download all UtilitiesPayments by unitNUmber")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "downloaded UtilitiesPayments by unitNumber successfully", content = {
+                    @Content(mediaType = "application/pdf", array = @ArraySchema(schema = @Schema(implementation = byte.class))) }),
+
+            @ApiResponse(responseCode = "500", description = "error downloading try later", content = @Content(examples = @ExampleObject(value = "{'message': 'server error try again later'}"))),
+
+    })
     @GetMapping("/download/allUtilPaymentsPerUnit/{unitNumber}")
-    public ResponseEntity<?> downloadAllUtilsPaymentsForSingleUnit(@PathVariable("unitNumber") String unitNumber, HttpServletResponse response) {
-        try {
-            List<UtilitiesPayments> utilPayments = utilitiesPaymentsService.findByUnitNumber(unitNumber);
+    public ResponseEntity<byte[]> downloadAllUtilsPaymentsForSingleUnit(@PathVariable("unitNumber") String unitNumber,
+            HttpServletResponse response) {
 
-            HttpServletResponse httpServletResponse = processResponse(response);
-
-            utilitiesPaymentsService.generate(httpServletResponse, "AllUtilitiesPayments", utilPayments);
-
-            return new ResponseEntity<>(CommonResponseMessageDto.builder().message("downloading").build(), HttpStatus.OK);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseEntity<>(CommonResponseMessageDto.builder().message(e.getMessage()).build(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
+        return new ResponseEntity<>(utilitiesPaymentsService.handleAllUtilsForSingleUnit(response, unitNumber),
+                HttpStatus.OK);
     }
+
+    @Operation(summary = " Endpoint to fetch all util-payments")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "fetched all util payments successfully", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = UtilsResDto.class)) }),
+
+    })
     @GetMapping
-    public ResponseEntity<?> getAllUtilsPayments(){
-        try{
-            return new ResponseEntity<>(UtilsResDto.builder()
-                    .utilsPayments(utilitiesPaymentsService.getAllUtils())
-                    .build(), HttpStatus.OK);
-        }catch (Exception e){
-            e.printStackTrace();
-            return new ResponseEntity<>(CommonResponseMessageDto.builder().message(e.getMessage()).build(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<UtilsResDto> getAllUtilsPayments() {
+
+        UtilsResDto utilsResDto = UtilsResDto.builder()
+                .utilsPayments(utilitiesPaymentsService.findAllUtilitiesPayments()).build();
+
+        return new ResponseEntity<>(utilsResDto, HttpStatus.OK);
 
     }
 
+    @Operation(summary = " Endpoint to fetch all until-payments by unitNumber")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "fetched until-payments  successfully", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = UtilsResDto.class)) }),
+
+            @ApiResponse(responseCode = "404", description = "unit by the unitNumber not found", content = @Content(examples = @ExampleObject(value = "{'message': 'unit by the unitNumber not found'}"))),
+
+    })
     @GetMapping("/getByUnit/{unitNumber}")
-    public ResponseEntity<?> findByUnitNumber(@PathVariable("unitNumber") String unitNumber){
-        try{
-            List<UtilitiesPayments> utilPayments = utilitiesPaymentsService.findByUnitNumber(unitNumber);
-            if(!utilPayments.isEmpty()) {
-                return new ResponseEntity<>(UtilsResDto.builder().utilsPayments(utilPayments).build(), HttpStatus.OK);
-            }else{
-                return new ResponseEntity<>(CommonResponseMessageDto.builder().message("unit doesn't exist").build(), HttpStatus.NOT_FOUND);
-            }
+    public ResponseEntity<UtilsResDto> findByUnitNumber(@PathVariable("unitNumber") String unitNumber) {
+        UtilsResDto utilsResDto = UtilsResDto.builder()
+                .utilsPayments(utilitiesPaymentsService.findAllByUnitNumber(unitNumber)).build();
 
-        } catch (Exception e){
-            e.printStackTrace();
-            return new ResponseEntity<>(CommonResponseMessageDto.builder().message(e.getMessage()).build(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        return new ResponseEntity<>(utilsResDto, HttpStatus.OK);
 
     }
+
+    @Operation(summary = " Endpoint to fetch all until-payments by their payment status")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "fetched until-payments by status successfully", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = UtilsResDto.class)) }),
+
+    })
     @GetMapping("/getByStatus/{status}")
-    public ResponseEntity<?> findByUnitWithArrears(@PathVariable("status") String status){
-        try{
-            List<UtilitiesPayments> utilPayments = utilitiesPaymentsService.findByStatus(status)
-                    .stream()
-                    .filter(util->"unpaid".equalsIgnoreCase(util.getStatus()))
-                    .collect(Collectors.toList());
+    public ResponseEntity<UtilsResDto> findByUnitWithArrears(@PathVariable("status") String status) {
 
-            if(!utilPayments.isEmpty()) {
-                return new ResponseEntity<>(UtilsResDto.builder().utilsPayments(utilPayments).build(), HttpStatus.OK);
-            }else{
-                return new ResponseEntity<>(CommonResponseMessageDto.builder().message("all unit bills paid").build(), HttpStatus.NOT_FOUND);
-            }
+        UtilsResDto utilsResDto = UtilsResDto.builder().utilsPayments(utilitiesPaymentsService.findByStatus(status))
+                .build();
 
-        } catch (Exception e){
-            e.printStackTrace();
-            return new ResponseEntity<>(CommonResponseMessageDto.builder().message(e.getMessage()).build(), HttpStatus.INTERNAL_SERVER_ERROR);
-
-        }
-
+        return new ResponseEntity<>(utilsResDto, HttpStatus.OK);
     }
+
+    @Operation(summary = " Endpoint to delete a utilpayment by id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "deleted until-payment  successfully", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = CommonResponseMessageDto.class)) }),
+
+            @ApiResponse(responseCode = "404", description = "util-payment not found", content = @Content(examples = @ExampleObject(value = "{'message': 'util payment not found'}"))),
+                @ApiResponse(responseCode = "403", description = "util-payment not found", content = @Content(examples = @ExampleObject(value = "{'message': 'Unauthorized, must be admin'}"))),
+    })
+
     @DeleteMapping("/deleteUtilities/{id}")
-    public ResponseEntity<?>  deleteUtility(@PathVariable("id") String id){
-        try{
-            String res = utilitiesPaymentsService.deleteUtility(id);
-            if(res==null) {
-                return new ResponseEntity<>(CommonResponseMessageDto.builder().message("deleted successfully").build(), HttpStatus.BAD_REQUEST);
-            }else{
-                return new ResponseEntity<>(CommonResponseMessageDto.builder().message("id doesn't exist").build(), HttpStatus.INTERNAL_SERVER_ERROR);
-            }
+    public ResponseEntity<CommonResponseMessageDto> deleteUtility(@PathVariable("id") String id) {
 
-        } catch (Exception e){
-            e.printStackTrace();
-            return new ResponseEntity<>(CommonResponseMessageDto.builder().message(e.getMessage()).build(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        return new ResponseEntity<>(CommonResponseMessageDto.builder()
+                .message(utilitiesPaymentsService.deleteUtility(id))
+                .build(), HttpStatus.OK);
 
     }
-
-    private UtilitiesPayments processSaveUtilitiesPayment(UtilsReqDto utilsReqDto){
-
-        Optional<Unit> unit = unitService.findByUnitNumber(utilsReqDto.getUnitNumber());
-        if(unit.isEmpty()){
-            return null;
-        }else{
-            boolean isPaid = ( Integer.parseInt(utilsReqDto.getAmountPaid()) - (Integer.parseInt(
-                    utilsReqDto.getGarbage())+Integer.parseInt(utilsReqDto.getWaterBill()))) >=0;
-            String status = isPaid ? "paid":"unpaid";
-
-            UtilitiesPayments utilitiesPayments = UtilitiesPayments.builder()
-                    .date(LocalDateTime.now())
-                    .waterBill(utilsReqDto.getWaterBill())
-                    .garbage(utilsReqDto.getGarbage())
-                    .amountPaid(utilsReqDto.getAmountPaid())
-                    .status(status)
-                    .unitNumber(unit.get().getUnitNumber())
-                    .unit(unit.get())
-                    .build();
-            return  utilitiesPayments;
-        }
-
-
-    }
-
 
 }

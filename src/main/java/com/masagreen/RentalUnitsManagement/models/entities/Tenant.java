@@ -1,34 +1,31 @@
-package com.masagreen.RentalUnitsManagement.models;
+package com.masagreen.RentalUnitsManagement.models.entities;
+
+import com.masagreen.RentalUnitsManagement.models.SuperClass;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import java.time.LocalDate;
 @Entity
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Tenant {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+public class Tenant extends SuperClass{
+  
     @Column(name="firstname")
     private String firstName;
     @Column(name="lastname")
     private String lastName;
     private String phone;
-    private LocalDate start;
-    private LocalDate ended;
+    private String start;
+    private String ended;
     @Column(name="payStatus")
     private String payStatus;
-
-
-    @OneToOne
-    @JoinColumn(name = "unit_id")
-    private Unit unit;
+    private String unitNumber;
 
 }

@@ -5,39 +5,196 @@ import com.lowagie.text.pdf.CMYKColor;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
+import com.masagreen.RentalUnitsManagement.dtos.CommonResponseMessageDto;
+import com.masagreen.RentalUnitsManagement.dtos.tenant.StatusUpdateReqDto;
+import com.masagreen.RentalUnitsManagement.dtos.tenant.TenantDTO;
 import com.masagreen.RentalUnitsManagement.dtos.tenant.TenantReqDto;
-import com.masagreen.RentalUnitsManagement.models.Tenant;
-import com.masagreen.RentalUnitsManagement.models.Unit;
+import com.masagreen.RentalUnitsManagement.dtos.tenant.TenantsResponseDto;
+import com.masagreen.RentalUnitsManagement.jwt.JwtFilter;
+import com.masagreen.RentalUnitsManagement.models.entities.Tenant;
+import com.masagreen.RentalUnitsManagement.models.entities.Unit;
 import com.masagreen.RentalUnitsManagement.repositories.TenantRepository;
-import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import com.masagreen.RentalUnitsManagement.repositories.UnitRepository;
+import com.masagreen.RentalUnitsManagement.utils.ProcessDownloadResponse;
 
+
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class TenantService {
     @Autowired
     private TenantRepository tenantRepository;
     @Autowired
-    private UnitService unitService;
-    public List<Tenant> findAllTenants() {
-        return tenantRepository.findAll();
+    private UnitRepository unitRepository;
+    @Autowired
+    private JwtFilter jwtFilter;
+
+    public TenantsResponseDto findAllTenants() {
+        List<TenantDTO> tenantDTOs = tenantRepository.findAll().stream().map(u -> new TenantDTO(u)).toList();
+
+        return TenantsResponseDto.builder().tenants(tenantDTOs).build();
+
     }
 
-    public void generate(HttpServletResponse res, String title, List<Tenant> tenants) throws DocumentException, IOException {
+  
+    public byte[] downloadAllTenants(HttpServletResponse response){
+       
+        List<Tenant> tenants = tenantRepository.findAll();
+        
 
+        ProcessDownloadResponse.processResponse(response);
+       
+        try {
+            log.info("preparing pdf for all tenants");
+            return generate("All Tenants", tenants);
+            
+            
+        } catch (DocumentException | IOException e) {
+            log.error("error processing tenants download {}", e.getMessage());
+            return null;
+        }
+
+   }
+
+    public byte[] handleAllTenantsWithArrearsDownloads(HttpServletResponse response) {
+
+        List<Tenant> tenants = tenantRepository.findAllTenantsWithArrears();
+
+        ProcessDownloadResponse.processResponse(response);
+
+        try {
+            log.info("preparing pdf for all tennats");
+            return generate("All Tenants With Arrears", tenants);
+            
+        } catch (DocumentException | IOException e) {
+            log.error("error processing tenants with arrears download {}", e.getCause());
+            return null;
+        }
+    }
+
+    public TenantsResponseDto getAllTenantsWithArrears() {
+
+        List<TenantDTO> tenantDTOs = tenantRepository.findAllTenantsWithArrears().stream().map(u -> new TenantDTO(u))
+                .toList();
+
+        return TenantsResponseDto.builder().tenants(tenantDTOs).build();
+
+    }
+
+    @Transactional
+    public String saveTenant(TenantReqDto tenantReqDto) {
+        // a tenant to be saved must be allocated a unit and the unit must be available.
+        Optional<Tenant> existingTenant = tenantRepository.findByPhone(tenantReqDto.phone());
+
+        if (existingTenant.isEmpty()) {
+
+            Unit unit = unitRepository.findByUnitNumber(tenantReqDto.unitNumber()).orElseThrow(
+                    () -> new EntityNotFoundException("unit to be assigned does not exist"));
+
+            if (unit.isStatus()) {
+                unit.setStatus(false);
+
+                Tenant tenant = new Tenant();
+
+                tenant.setFirstName(tenantReqDto.firstName());
+                tenant.setLastName(tenantReqDto.lastName());
+                tenant.setPhone(tenantReqDto.phone());
+                tenant.setStart(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MMM-dd")).toString());
+                tenant.setEnded(null);
+                tenant.setPayStatus("unpaid");
+                tenant.setUnitNumber(tenantReqDto.unitNumber());
+                // tenant.setUnit(unit);
+                tenantRepository.save(tenant);
+
+                unitRepository.save(unit);
+
+                return "saved";
+            } else {
+                throw new IllegalStateException("not saved, unit is already assigned");
+            }
+
+        } else {
+
+            return "not saved";
+        }
+
+    }
+
+    public Tenant saveTenant(Tenant tenant) {
+        return tenantRepository.save(tenant);
+
+    }
+
+    @Transactional
+    public CommonResponseMessageDto deleteTenant(String id) {
+        Tenant tenant = tenantRepository.findById(id).orElseThrow(
+                () -> new EntityNotFoundException("tenant does not exist"));
+        
+    
+
+        if (jwtFilter.isAdmin()) {
+
+            tenantRepository.deleteById(id);
+            Unit unit = unitRepository.findByUnitNumber(tenant.getUnitNumber()).orElseThrow(
+                    () -> new EntityNotFoundException("unit to be assigned not found"));
+            // make the unit available
+            unit.setStatus(true);
+            unitRepository.save(unit);
+            return CommonResponseMessageDto.builder().message("deleted successfully").build();
+
+        } else {
+            throw new AccessDeniedException("Unauthorized, must be an admin");
+        }
+
+    }
+
+    public TenantDTO getByPhone(String phone) {
+        Tenant tenant = tenantRepository.findByPhone(phone).orElseThrow(
+                () -> new EntityNotFoundException("No tenant found"));
+        return new TenantDTO(tenant);
+
+    }
+
+    public CommonResponseMessageDto updatePaymentStatus(StatusUpdateReqDto statusUpdateReqDto) {
+
+        if (jwtFilter.isAdmin()) {
+            Tenant tenant = tenantRepository.findByPhone(statusUpdateReqDto.phone()).orElseThrow(
+                    () -> new EntityNotFoundException("tenant not found"));
+
+            tenant.setPayStatus(statusUpdateReqDto.payStatus());
+            tenantRepository.save(tenant);
+            return CommonResponseMessageDto.builder().message("updated successfully").build();
+        } else {
+            throw new AccessDeniedException("Unauthorized, must be admin");
+        }
+
+    }
+
+    private byte[] generate( String title, List<Tenant> tenants)
+            throws DocumentException, IOException {
 
         Document document = new Document(PageSize.A4);
-
-
-        PdfWriter.getInstance(document, res.getOutputStream());
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        PdfWriter pdfWriter =PdfWriter.getInstance(document, byteArrayOutputStream);
 
         document.open();
-
 
         Font fontTitle = FontFactory.getFont(FontFactory.HELVETICA_BOLD);
         fontTitle.setSize(20);
@@ -49,23 +206,19 @@ public class TenantService {
 
         PdfPTable table = new PdfPTable(6);
 
-
         table.setWidthPercentage(100f);
-        table.setWidths(new int[]{1, 1, 1, 1, 1, 1});
+        table.setWidths(new int[] { 1, 1, 1, 1, 1, 1 });
         table.setSpacingBefore(3);
 
-
         PdfPCell cell = new PdfPCell();
-
 
         cell.setBackgroundColor(CMYKColor.gray);
         cell.setPadding(5);
 
-
         Font font = FontFactory.getFont(FontFactory.HELVETICA);
         font.setColor(CMYKColor.green);
         font.setSize(12);
-        //first titles row
+        // first titles row
         cell.setPhrase(new Phrase("Firstname", font));
         table.addCell(cell);
         cell.setPhrase(new Phrase("Phone no.", font));
@@ -80,66 +233,21 @@ public class TenantService {
         table.addCell(cell);
 
         // Iterating over the list of utils
-        for (Tenant tenant: tenants) {
+        for (Tenant tenant : tenants) {
 
             table.addCell(tenant.getFirstName());
             table.addCell(tenant.getPhone());
             table.addCell(String.valueOf(tenant.getStart()));
             table.addCell(String.valueOf(tenant.getEnded()));
             table.addCell(tenant.getPayStatus());
-            table.addCell(tenant.getUnit().getUnitNumber());
+            table.addCell(tenant.getUnitNumber());
 
         }
 
         document.add(table);
         document.close();
+        pdfWriter.close();
+        return byteArrayOutputStream.toByteArray();
     }
 
-    public Tenant saveTenant(TenantReqDto tenantReqDto) {
-        Optional<Unit> unit = unitService.findByUnitNumber(tenantReqDto.getUnitNumber());
-
-        if(unit.isPresent() && unit.get().isStatus()){
-            unit.get();
-            unit.get().setStatus(false);
-            Tenant tenant = Tenant.builder()
-                    .firstName(tenantReqDto.getFirstName())
-                    .lastName(tenantReqDto.getLastName())
-                    .phone(tenantReqDto.getPhone())
-                    .start(LocalDate.now())
-                    .ended(null)
-                    .payStatus("unpaid")
-                    .unit(unit.get())
-                    .build();
-           
-            unitService.saveUnit(unit.get());
-           return tenantRepository.save(tenant);
-        }
-        return null;
-
-    }
-    public Tenant saveTenant(Tenant tenant) {
-       return tenantRepository.save(tenant);
-
-    }
-
-    public String deleteTenant(String id) {
-        Optional<Tenant> tenant = tenantRepository.findById(Long.parseLong(id));
-
-        if (tenant.isPresent()){
-            Unit unit = tenant.get().getUnit();
-            unit.setStatus(true);
-            unitService.saveUnit(unit);
-            tenantRepository.deleteById(Long.parseLong(id));
-            return null;
-        }
-        return "tenant id doesn't exist";
-    }
-
-    public Optional<Tenant> findByPhone(String phone) {
-        return tenantRepository.findByPhone(phone);
-    }
-
-    public Optional<Tenant> findByTenantId(long l) {
-       return  tenantRepository.findById(l);
-    }
 }

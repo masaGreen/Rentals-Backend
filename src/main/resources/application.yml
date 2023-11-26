@@ -3,20 +3,42 @@ server:
 spring:
     application:
         name: Rental-Unit-Management
+
+    # datasource:
+    #     url: jdbc:h2:mem:mydb
+    #     username: root
+    #     password: pooltask1
+    #     driverClassName: org.h2.Driver
+    # jpa:
+    #     database-platform: org.hibernate.dialect.H2Dialect
+    #     hibernate:
+    #         ddl-auto: update
+            
     datasource:
         driver-class-name: org.postgresql.Driver
-        password: usT9yCQTKwfdrzGGcvB5iCpz9jPUL2j5
-        username: masa
-        url: jdbc:postgresql://dpg-cke14o4gonuc738sp50g-a.singapore-postgres.render.com/rentals_uvbx
+        password: ${POSTGRES_PASSWORD}
+        username: ${POSTGRES_USERNAME}
+        url: ${POSTGRES_URL}
         
     jpa:
         hibernate:
             ddl-auto: update
             dialect: PostgreSQLDialect
-        show-sql: true
+        
+logging:
+    level:
+        org.springframework.security: INFO
+        root: INFO
+        org:
+            springframework:
+            web:
+                servlet:
+                org.springframework.web.servlet.DispatcherServlet: INFO
 jwt:
-    secret: ZxAlWGbVUaVVy0RpA7154DpT2nlreIyvdNT17CVuRDx3sTcfwr1Zw1wTTP0tOoeJ
-    
+    secret: ${jwtSecret}
+initUser:
+    email:  ${INIT_EMAIL}
+    password:   ${INIT_PASSWORD}
 mail:
     originmail: 
 
