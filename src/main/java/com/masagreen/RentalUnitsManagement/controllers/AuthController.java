@@ -121,8 +121,7 @@ public class AuthController {
         return new ResponseEntity<>(appUserService.deleteAppUser(id), HttpStatus.ACCEPTED);
     }
 
-    // initializing a user who will approve others as by default users are
-    // registered unapproved
+   
 
     // private void notifyAdmins(String email, String message){
     // List<AppUser> allAdmins = appUserService.findAllUsers().getUsers()
