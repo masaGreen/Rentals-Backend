@@ -1,7 +1,5 @@
 package com.masagreen.RentalUnitsManagement.dtos.tenant;
 
-import java.time.LocalDate;
-
 import com.masagreen.RentalUnitsManagement.models.entities.Tenant;
 
 import lombok.Data;

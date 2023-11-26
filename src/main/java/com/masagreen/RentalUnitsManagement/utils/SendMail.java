@@ -14,8 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 public class SendMail {
     
 
-    @Autowired
-    private JavaMailSender emailSender;
 
     @Value("${mail.originmail}")
     private String originmail;
