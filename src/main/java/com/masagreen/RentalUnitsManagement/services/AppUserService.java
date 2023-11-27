@@ -29,7 +29,6 @@ import com.masagreen.RentalUnitsManagement.jwt.JwtService;
 import com.masagreen.RentalUnitsManagement.models.entities.AppUser;
 import com.masagreen.RentalUnitsManagement.repositories.AppUserRepository;
 
-import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -69,7 +68,7 @@ public class AppUserService {
             AppUser user = AppUser.builder()
             .email(signUpReqDto.getEmail())
             .password(passwordEncoder.encode(signUpReqDto.getPassword()))
-            .status(false)
+            .status(true)
             .role(signUpReqDto.getRole())
             .build();
             AppUser savedUser=appUserRepository.save(user);
@@ -181,14 +180,14 @@ public class AppUserService {
         }
     }
 
-    @PostConstruct
-    private void initUser() {
-        appUserRepository.save(
-                AppUser.builder()
-                        .email(email)
-                        .password(passwordEncoder.encode(password))
-                        .status(true)
-                        .role("ADMIN")
-                        .build());
-    }
+    // @PostConstruct
+    // private void initUser() {
+    //     appUserRepository.save(
+    //             AppUser.builder()
+    //                     .email(email)
+    //                     .password(passwordEncoder.encode(password))
+    //                     .status(true)
+    //                     .role("ADMIN")
+    //                     .build());
+    // }
 }
