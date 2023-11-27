@@ -18,11 +18,10 @@ spring:
         driver-class-name: org.postgresql.Driver
         password: ${POSTGRES_PASSWORD}
         username: ${POSTGRES_USERNAME}
-        url: ${POSTGRES_URL}
-        
+        url: ${POSTGRES_URL}       
     jpa:
         hibernate:
-            ddl-auto: create-drop
+            ddl-auto: update
             dialect: PostgreSQLDialect
         
 logging:
