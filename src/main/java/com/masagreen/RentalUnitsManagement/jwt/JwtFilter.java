@@ -69,12 +69,13 @@ public class JwtFilter extends OncePerRequestFilter {
                             new WebAuthenticationDetails(request));
 
                     SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
-                    log.info("authenitcated user {}", userName);
+
+//                    log.info("authenitcated user {}", userName);
                 }
                 filterChain.doFilter(request, response);
             }
         } catch (MalformedJwtException | ExpiredJwtException | UnsupportedJwtException | SignatureException ex) {
-            log.error("error parsing jwts");
+//            log.error("error parsing jwts");
             setResponseHeadersOnException(response);
             handlerExceptionResolver.resolveException(request, response, null, ex);
         }

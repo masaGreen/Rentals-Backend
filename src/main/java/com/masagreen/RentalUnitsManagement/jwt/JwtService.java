@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import com.masagreen.RentalUnitsManagement.models.entities.AppUser;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -16,16 +17,17 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.stereotype.Service;
 
-@Component
+@Service
 public class JwtService {
 
     @Value("${jwt.secret}")
     private String secret;
 
-    public String generateToken(UserDetails userDetails, String role) {
+    public String generateToken(AppUser userDetails) {
         Map<String, Object> extraClaims = new HashMap<>();
-        extraClaims.put("role", role);
+        extraClaims.put("role", userDetails.getRole());
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
@@ -37,9 +39,9 @@ public class JwtService {
 
     }
 
-    public String generateTokenWithoutExtraClaims(UserDetails user) {
+    public String generateTokenWithoutExtraClaims(AppUser user) {
 
-        return generateToken(user, null);
+        return generateToken(user);
     }
 
     public Claims extractAllClaims(String token) {

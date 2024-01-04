@@ -19,7 +19,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
             AuthenticationException authException) throws IOException, ServletException {
 
             log.info("Denied: {}", authException.getMessage()+request.getRequestURI());
-       
+            authException.printStackTrace();
             response.setContentType("application/json;charset=UTF-8");
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.getWriter().write("{ \"errorsMessages\": { \"message\": \"Denied: " + authException.getMessage() + "\" } }");

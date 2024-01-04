@@ -27,7 +27,8 @@ public class WebConfig {
             "/v1/auth/signup",
             "/swagger-ui.html",
             "swagger-ui/**",
-            "/v3/api-docs/**"
+            "/v3/api-docs/**",
+            "/auth/validate-email/**"
             };
 @Autowired
 private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
@@ -60,9 +61,10 @@ private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
                 })
                 .authenticationProvider(authenticationProvider)
-                .exceptionHandling(exceptionHandling->exceptionHandling.authenticationEntryPoint(jwtAuthenticationEntryPoint))
+                .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(exceptionHandling->exceptionHandling.authenticationEntryPoint(jwtAuthenticationEntryPoint));
                
-                .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
 
     }

@@ -13,5 +13,6 @@ public interface AppUserRepository extends JpaRepository<AppUser, String>{
     Optional<AppUser> findByPassword(String encode);
 
     Boolean existsByEmail(String email);
-    
+
+    Optional<AppUser> findByValidationCode(String code);
 }

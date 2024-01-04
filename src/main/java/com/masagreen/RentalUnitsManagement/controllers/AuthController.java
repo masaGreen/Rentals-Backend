@@ -10,7 +10,10 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -22,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequestMapping("/v1/auth")
 @RestController
-@Tag(name = "Authorization")
+@Tag(name = "authorization")
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -33,6 +36,7 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "fetched successfully.", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = UsersResponseDto.class)) })
     })
+    @SecurityRequirement(name="bearerAuth")
     @GetMapping
     public ResponseEntity<UsersResponseDto> fetchAllUsers() {
         return new ResponseEntity<>(appUserService.findAllUsers(), HttpStatus.OK);
@@ -73,6 +77,7 @@ public class AuthController {
             @ApiResponse(responseCode = "403", description = "must be admin to approve", content = @Content(examples = @ExampleObject(value = "{'message': 'wrong credentials or you are not admin'}"))),
 
     })
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/approveUser")
     public ResponseEntity<CommonResponseMessageDto> updateUser(@RequestBody ApprovalDto approvalDto) {
 
@@ -80,7 +85,20 @@ public class AuthController {
 
     }
 
-    @Operation(summary = " Endpoint to handle forgotten password")
+    @Operation(summary = "validate user email")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "email validated successfully", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = CommonResponseMessageDto.class)) }),
+            @ApiResponse(responseCode = "404", description = "email not signed up", content = @Content(examples = @ExampleObject(value = "{'message': 'email not signed up'}"))),
+    })
+    @GetMapping("/validate-email/{code}")
+    public ResponseEntity<CommonResponseMessageDto> validateEmail(@PathVariable String code) {
+
+        return new ResponseEntity<>(appUserService.validateEmail(code), HttpStatus.ACCEPTED);
+
+    }
+
+        @Operation(summary = " Endpoint to handle forgotten password")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "new pasword sent to email successfully", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = CommonResponseMessageDto.class)) }),
@@ -103,6 +121,7 @@ public class AuthController {
             @ApiResponse(responseCode = "403", description = "mismatching passwords", content = @Content(examples = @ExampleObject(value = "{'message': 'passwords dont match'}"))),
 
     })
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/changePassword")
     public ResponseEntity<CommonResponseMessageDto> changePassword(
             @Valid @RequestBody ChangePasswordReqDto changePasswordReqDto) {
@@ -116,12 +135,14 @@ public class AuthController {
 
             @ApiResponse(responseCode = "403", description = "not authorized", content = @Content(examples = @ExampleObject(value = "{'message': 'only admin can delete a suer'}"))),
     })
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/deleteUser/{id}")
     public ResponseEntity<CommonResponseMessageDto> deleteTenant(@PathVariable("id") String id) {
         return new ResponseEntity<>(appUserService.deleteAppUser(id), HttpStatus.ACCEPTED);
     }
 
-   
+
+
 
     // private void notifyAdmins(String email, String message){
     // List<AppUser> allAdmins = appUserService.findAllUsers().getUsers()

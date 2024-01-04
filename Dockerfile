@@ -1,4 +1,3 @@
-# Use Maven and OpenJDK 20 as the base image for the build stage
 FROM maven:3.8.5-openjdk-17 AS build
 
 # Set the working directory in the container

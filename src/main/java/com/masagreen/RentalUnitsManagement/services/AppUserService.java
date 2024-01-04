@@ -3,6 +3,7 @@ package com.masagreen.RentalUnitsManagement.services;
 import java.util.List;
 import java.util.UUID;
 
+import com.masagreen.RentalUnitsManagement.exceptions.UserNotValidatedException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -48,12 +49,7 @@ public class AppUserService {
     private final JwtService jwtService;
     private final JwtFilter jwtFilter;
 
-    @Value("${initUser.email}")
-    private String email;
 
-    @Value("${initUser.password}")
-    private String password;
-    
     // using email as my username
 
     public AppUser findAppUserByEmail(String email, String errorMessage){
@@ -69,9 +65,12 @@ public class AppUserService {
             .email(signUpReqDto.getEmail())
             .password(passwordEncoder.encode(signUpReqDto.getPassword()))
             .status(true)
+            .validationCode(UUID.randomUUID().toString())
             .role(signUpReqDto.getRole())
             .build();
             AppUser savedUser=appUserRepository.save(user);
+
+            //send mail with the validation code
             
             return SignUpResponseDto.builder().id(savedUser.getId()).email(savedUser.getEmail()).build();
         }else{
@@ -81,30 +80,42 @@ public class AppUserService {
     public LoginResponseDTO loginUser(AuthReqBodyDto authReqBodyDto){
 
             //check if user exists else throw error and return
-            AppUser user = findAppUserByEmail(authReqBodyDto.email(), "email/password incorrect");
 
-            Boolean isPasswordMatch = passwordEncoder.matches(authReqBodyDto.password(), user.getPassword());
-            //if password and emails match authenticate the user 
+            AppUser user = findAppUserByEmail(authReqBodyDto.email(), "email/password incorrect");
+            if(!user.isEmailValidated()) throw new UserNotValidatedException("user email not validated, validate first");
+            boolean isPasswordMatch = passwordEncoder.matches(authReqBodyDto.password(), user.getPassword());
+            //if password and emails match authenticate the user
+
             if (isPasswordMatch && user.isStatus()) {
                 Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                     authReqBodyDto.email(), authReqBodyDto.password()));
                 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
                 log.info("logged in user: {}", authReqBodyDto.email());
-                
-                return  LoginResponseDTO.builder()
+
+                return LoginResponseDTO.builder()
                                 .id(user.getId())
                                 .email(user.getEmail())
-                                .token(jwtService.generateToken(user, user.getRole()))
+                                .token(jwtService.generateToken(user))
                                 .status(user.isStatus())
                                 .role(user.getRole())
                                 .build();
+                
 
             } else {
                 throw new BadCredentialsException("email or password incorrect");
             }
 
         
+    }
+
+    public CommonResponseMessageDto validateEmail(String code){
+        AppUser user = appUserRepository.findByValidationCode(code).orElseThrow(
+                ()-> new EntityNotFoundException("incorrect validation code")
+        );
+        user.setEmailValidated(true);
+        appUserRepository.save(user);
+        return CommonResponseMessageDto.builder().message("successfully validated").build();
     }
 
     public CommonResponseMessageDto manageUserStatus(ApprovalDto approvalDto){

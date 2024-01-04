@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -102,19 +103,36 @@ public class GlobalExceptionsHadler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(exceptionsObject, HttpStatus.FORBIDDEN);
     }
 
+    @ExceptionHandler(UserNotValidatedException.class)
+    public ResponseEntity<Object> handleUserNotValidatedException(UserNotValidatedException ex) {
+        log.error("logging {}", ex.getMessage());
+        ExceptionsObject exceptionsObject = ExceptionsObject.withSingleMessage(new Date(), ex.getMessage(),
+                HttpStatus.UNAUTHORIZED.value());
+        return new ResponseEntity<>(exceptionsObject, HttpStatus.UNAUTHORIZED);
+    }
+
+
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<Object> handleIllegalStateException(IllegalStateException ex) {
         log.error("logging {}", ex.getMessage());
         ExceptionsObject exceptionsObject = ExceptionsObject.withSingleMessage(new Date(), ex.getMessage(),
-                HttpStatus.UNAUTHORIZED.value());
+                HttpStatus.BAD_REQUEST.value());
         return new ResponseEntity<>(exceptionsObject, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<Object> handleBadCredentialsException(BadCredentialsException ex) {
+        log.error("logging {}", ex.getMessage());
+        ExceptionsObject exceptionsObject = ExceptionsObject.withSingleMessage(new Date(), ex.getMessage(),
+                HttpStatus.UNAUTHORIZED.value());
+        return new ResponseEntity<>(exceptionsObject, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Object> handleIllegalStateException(IllegalArgumentException ex) {
         log.error("logging {}", ex.getMessage());
         ExceptionsObject exceptionsObject = ExceptionsObject.withSingleMessage(new Date(), ex.getMessage(),
-                HttpStatus.UNAUTHORIZED.value());
+                HttpStatus.BAD_REQUEST.value());
         return new ResponseEntity<>(exceptionsObject, HttpStatus.BAD_REQUEST);
     }
 

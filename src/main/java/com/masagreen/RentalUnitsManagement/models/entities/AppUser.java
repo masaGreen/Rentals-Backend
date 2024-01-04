@@ -31,8 +31,11 @@ public class AppUser extends SuperClass implements UserDetails {
 
     private String password;
     private boolean status;
+    private String validationCode;
+    private boolean isEmailValidated;
 
     private String role;
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
