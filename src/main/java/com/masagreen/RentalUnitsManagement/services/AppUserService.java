@@ -82,7 +82,7 @@ public class AppUserService {
             //check if user exists else throw error and return
 
             AppUser user = findAppUserByEmail(authReqBodyDto.email(), "email/password incorrect");
-            if(!user.isEmailValidated()) throw new UserNotValidatedException("user email not validated, validate first");
+            //if(!user.isEmailValidated()) throw new UserNotValidatedException("user email not validated, validate first");
             boolean isPasswordMatch = passwordEncoder.matches(authReqBodyDto.password(), user.getPassword());
             //if password and emails match authenticate the user
 
