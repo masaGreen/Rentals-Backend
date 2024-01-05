@@ -4,8 +4,8 @@ import com.masagreen.RentalUnitsManagement.dtos.CommonResponseMessageDto;
 import com.masagreen.RentalUnitsManagement.dtos.auth.*;
 import com.masagreen.RentalUnitsManagement.exceptions.PasswordMismatchException;
 import com.masagreen.RentalUnitsManagement.exceptions.WrongEmailValidationCode;
-import com.masagreen.RentalUnitsManagement.jwt.JwtFilter;
-import com.masagreen.RentalUnitsManagement.jwt.JwtService;
+import com.masagreen.RentalUnitsManagement.security.jwt.JwtFilter;
+import com.masagreen.RentalUnitsManagement.security.jwt.JwtService;
 import com.masagreen.RentalUnitsManagement.models.entities.AppUser;
 import com.masagreen.RentalUnitsManagement.repositories.AppUserRepository;
 import jakarta.persistence.EntityExistsException;
@@ -35,7 +35,7 @@ public class AppUserService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
-    private final JwtFilter jwtFilter;
+    private final EmailService emailService;
 
 
     public AppUser findAppUserByEmail(String email, String errorMessage) {
@@ -49,18 +49,29 @@ public class AppUserService {
             AppUser user = AppUser.builder()
                     .email(signUpReqDto.getEmail())
                     .password(passwordEncoder.encode(signUpReqDto.getPassword()))
+                    //when admin approval feature is activated this should be false by default
                     .status(true)
                     .validationCode(UUID.randomUUID().toString())
                     .role(signUpReqDto.getRole())
+                    .isEmailValidated(false)
                     .build();
             AppUser savedUser = appUserRepository.save(user);
 
-            //send mail with the validation code
+            //send mail with the validation code//this code should relinquish the thread
+            //emailService.sendEmailValidationCode(savedUser.getEmail(), savedUser.getValidationCode());
 
             return SignUpResponseDto.builder().id(savedUser.getId()).email(savedUser.getEmail()).build();
         } else {
             throw new EntityExistsException("user with email: " + signUpReqDto.getEmail() + " exists");
         }
+    }
+
+    public CommonResponseMessageDto resendValidationCode(String email){
+        AppUser user = findAppUserByEmail(email, "user not found");
+        //resend code to mail
+        //emailService.sendEmailValidationCode(user.getEmail(),user.getValidationCode());
+        return  CommonResponseMessageDto.builder().message("validation code sent to email").build();
+
     }
 
     public LoginResponseDTO loginUser(AuthReqBodyDto authReqBodyDto) {
@@ -104,14 +115,19 @@ public class AppUserService {
         return CommonResponseMessageDto.builder().message("successfully validated").build();
     }
 
-    public CommonResponseMessageDto manageUserStatus(ApprovalDto approvalDto) {
-
+    public CommonResponseMessageDto manageUserStatus(ApprovalDto approvalDto, HttpServletRequest request) {
+            AppUser loggedAdmin = findAppUserByEmail((String)request.getAttribute("email"), "Not found");
             AppUser user = findAppUserByEmail(approvalDto.email(), "not found");
+            boolean status = user.isStatus();
             user.setStatus(!user.isStatus());
 
             appUserRepository.save(user);
 
             // notify other admins via mail
+            //List<AppUser> admins = appUserRepository.findAllByRole("ADMIN");
+            //admins.remove(loggedAdmin);
+            //emailService.sendApprovedByEmail(admins, user.getEmail(),status);
+
 
             return CommonResponseMessageDto.builder().message("user status changed").build();
 
@@ -165,21 +181,11 @@ public class AppUserService {
         if (existsById) {
 
                 appUserRepository.deleteById(id);
-                // notifyAdmins(jwtFilter.getCurrentUserEmail(), "Deletion");
-                return CommonResponseMessageDto.builder().message("successfully deleted").build();
+
+            return CommonResponseMessageDto.builder().message("successfully deleted").build();
         } else {
             throw new EntityNotFoundException("user doesn't exist");
         }
     }
 
-    // @PostConstruct
-    // private void initUser() {
-    //     appUserRepository.save(
-    //             AppUser.builder()
-    //                     .email(email)
-    //                     .password(passwordEncoder.encode(password))
-    //                     .status(true)
-    //                     .role("ADMIN")
-    //                     .build());
-    // }
 }

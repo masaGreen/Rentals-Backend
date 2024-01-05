@@ -1,4 +1,4 @@
-package com.masagreen.RentalUnitsManagement.jwt;
+package com.masagreen.RentalUnitsManagement.security.jwt;
 
 import com.masagreen.RentalUnitsManagement.models.entities.AppUser;
 import io.jsonwebtoken.Claims;

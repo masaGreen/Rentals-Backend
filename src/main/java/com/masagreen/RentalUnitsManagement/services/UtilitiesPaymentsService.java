@@ -7,7 +7,6 @@ import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import com.masagreen.RentalUnitsManagement.dtos.CommonResponseMessageDto;
 import com.masagreen.RentalUnitsManagement.dtos.utils.UtilsReqDto;
-import com.masagreen.RentalUnitsManagement.jwt.JwtFilter;
 import com.masagreen.RentalUnitsManagement.models.entities.UtilitiesPayments;
 import com.masagreen.RentalUnitsManagement.repositories.UtilitiesPaymentsRepository;
 import com.masagreen.RentalUnitsManagement.utils.ProcessDownloadResponse;
@@ -15,8 +14,6 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;

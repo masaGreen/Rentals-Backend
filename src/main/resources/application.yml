@@ -32,7 +32,17 @@ springdoc:
     tagsSorter=alpha:
 
 mail:
-  originmail:
+#  host: smtp.gmail.com
+#  port: ${MAIL_PORT}
+#  origin: ${MAIL_USERNAME}
+  origin:
+#  password: ${MAIL_PASSWORD}
+  properties:
+    mail:
+      smtp:
+        auth: true
+        starttls:
+          enable: true
 
 
 

@@ -1,6 +1,6 @@
 package com.masagreen.RentalUnitsManagement.config;
 
-import com.masagreen.RentalUnitsManagement.services.CustomSecurityService;
+import com.masagreen.RentalUnitsManagement.security.services.CustomSecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

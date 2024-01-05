@@ -1,4 +1,4 @@
-package com.masagreen.RentalUnitsManagement.jwt;
+package com.masagreen.RentalUnitsManagement.security.jwt;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

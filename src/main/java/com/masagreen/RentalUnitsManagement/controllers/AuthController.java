@@ -77,9 +77,9 @@ public class AuthController {
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/approveUser")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<CommonResponseMessageDto> updateUser(@RequestBody ApprovalDto approvalDto) {
+    public ResponseEntity<CommonResponseMessageDto> updateUser(@RequestBody ApprovalDto approvalDto, HttpServletRequest request) {
 
-        return new ResponseEntity<>(appUserService.manageUserStatus(approvalDto), HttpStatus.ACCEPTED);
+        return new ResponseEntity<>(appUserService.manageUserStatus(approvalDto, request), HttpStatus.ACCEPTED);
 
     }
 
@@ -93,6 +93,19 @@ public class AuthController {
     public ResponseEntity<CommonResponseMessageDto> validateEmail(@PathVariable String code) {
 
         return new ResponseEntity<>(appUserService.validateEmail(code), HttpStatus.ACCEPTED);
+
+    }
+
+    @Operation(summary = "resend validation code")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "validation code resent successfully", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = CommonResponseMessageDto.class))}),
+            @ApiResponse(responseCode = "404", description = "email not signed up", content = @Content(examples = @ExampleObject(value = "{'message': 'email not signed up'}"))),
+    })
+    @GetMapping("/resend-email-code/{email}")
+    public ResponseEntity<CommonResponseMessageDto> resendValidationCode(@PathVariable String email) {
+
+        return new ResponseEntity<>(appUserService.resendValidationCode(email), HttpStatus.ACCEPTED);
 
     }
 
@@ -140,30 +153,4 @@ public class AuthController {
         return new ResponseEntity<>(appUserService.deleteAppUser(id), HttpStatus.ACCEPTED);
     }
 
-
-    // private void notifyAdmins(String email, String message){
-    // List<AppUser> allAdmins = appUserService.findAllUsers().getUsers()
-    // .stream().filter(adm -> "admin".equalsIgnoreCase(adm.getRole())).toList();
-
-    // // remove current admin doing the changes and send the mail notification to
-    // all
-    // // the other admins
-    // List<String> allAdminsProcessed = allAdmins.stream().map(AppUser::getEmail)
-    // .filter(
-    // adminEmail -> !Objects.equals(adminEmail, email)).toList();
-
-    // String[] emailList = new String[allAdmins.size()];
-    // for (int i = 0; i < allAdmins.size(); i++) {
-    // emailList[i] = allAdminsProcessed.get(i);
-    // }
-    // // send the message
-    // sendMail.sendApprovedBy(
-    // emailList,
-    // "<h2>User "+message+"</h2>",
-    // "<p> User with email: <strong>" + email
-    // + "</strong> by Admin with email: <strong>" + jwtFilter.getCurrentUserEmail()
-    // + "</strong>"
-
-    // );
-    // }
 }

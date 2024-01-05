@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Objects;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -27,5 +28,18 @@ public class AppUser extends SuperClass {
     private boolean isEmailValidated;
 
     private String role;
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.getId());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(this == obj) return true;
+        if(obj == null || getClass() != obj.getClass()) return false;
+        return ((AppUser) obj).getId().equals(this.getId());
+
+    }
 }
 

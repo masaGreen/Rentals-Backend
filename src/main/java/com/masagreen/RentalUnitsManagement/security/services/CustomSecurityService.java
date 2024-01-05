@@ -1,4 +1,4 @@
-package com.masagreen.RentalUnitsManagement.services;
+package com.masagreen.RentalUnitsManagement.security.services;
 
 import com.masagreen.RentalUnitsManagement.models.entities.AppUser;
 import com.masagreen.RentalUnitsManagement.repositories.AppUserRepository;

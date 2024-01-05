@@ -1,7 +1,7 @@
 package com.masagreen.RentalUnitsManagement.config;
 
-import com.masagreen.RentalUnitsManagement.jwt.JwtAuthenticationEntryPoint;
-import com.masagreen.RentalUnitsManagement.jwt.JwtFilter;
+import com.masagreen.RentalUnitsManagement.security.jwt.JwtAuthenticationEntryPoint;
+import com.masagreen.RentalUnitsManagement.security.jwt.JwtFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;

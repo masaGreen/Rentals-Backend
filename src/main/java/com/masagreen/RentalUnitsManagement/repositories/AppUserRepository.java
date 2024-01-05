@@ -3,6 +3,7 @@ package com.masagreen.RentalUnitsManagement.repositories;
 import com.masagreen.RentalUnitsManagement.models.entities.AppUser;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface AppUserRepository extends JpaRepository<AppUser, String> {
@@ -14,4 +15,6 @@ public interface AppUserRepository extends JpaRepository<AppUser, String> {
     Boolean existsByEmail(String email);
 
     Optional<AppUser> findByValidationCode(String code);
+
+    List<AppUser> findAllByRole(String role);
 }
