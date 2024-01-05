@@ -9,8 +9,11 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -27,10 +30,8 @@ public class JwtFilter extends OncePerRequestFilter {
     private final HandlerExceptionResolver handlerExceptionResolver;
     @Autowired
     private JwtService jwtService;
-
     @Autowired
     private UserDetailsService userDetailsService;
-    private Claims claims;
 
     public JwtFilter(HandlerExceptionResolver handlerExceptionResolver) {
         this.handlerExceptionResolver = handlerExceptionResolver;
@@ -38,8 +39,8 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -51,8 +52,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
             String userName = jwtService.extractUsername(jwt);
 
-            claims = jwtService.extractAllClaims(jwt);
-
             if (userName != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(userName);
 
@@ -61,18 +60,19 @@ public class JwtFilter extends OncePerRequestFilter {
                     UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities());
 
-                    // set the session id and record the remote address sending the received request
+
+                    request.setAttribute("email", userDetails.getUsername());
+                    // record the remote address sending the received request
                     usernamePasswordAuthenticationToken.setDetails(
                             new WebAuthenticationDetails(request));
 
                     SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
 
-//                    log.info("authenitcated user {}", userName);
                 }
                 filterChain.doFilter(request, response);
             }
         } catch (MalformedJwtException | ExpiredJwtException | UnsupportedJwtException | SignatureException ex) {
-//            log.error("error parsing jwts");
+            log.error("error parsing jwts {}", ex.getMessage());
             setResponseHeadersOnException(response);
             handlerExceptionResolver.resolveException(request, response, null, ex);
         }
@@ -84,18 +84,6 @@ public class JwtFilter extends OncePerRequestFilter {
         response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         response.setHeader("Access-Control-Max-Age", "3600");
         response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, Xsrf-Token");
-    }
-
-    public boolean isAdmin() {
-        return "admin".equalsIgnoreCase((String) claims.get("role"));
-    }
-
-    public boolean isUser() {
-        return "user".equalsIgnoreCase((String) claims.get("role"));
-    }
-
-    public String getCurrentUserEmail() {
-        return claims.getSubject();
     }
 
 }

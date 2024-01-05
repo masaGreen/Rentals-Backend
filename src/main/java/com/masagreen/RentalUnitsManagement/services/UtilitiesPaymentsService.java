@@ -13,6 +13,7 @@ import com.masagreen.RentalUnitsManagement.repositories.UtilitiesPaymentsReposit
 import com.masagreen.RentalUnitsManagement.utils.ProcessDownloadResponse;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
@@ -26,19 +27,12 @@ import java.util.Optional;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class UtilitiesPaymentsService {
-    @Autowired
-    private UtilitiesPaymentsRepository utilitiesPaymentsRepository;
-    @Autowired
-    private JwtFilter jwtFilter;
-
-    public Optional<UtilitiesPayments> findUtilityById(String id) {
-        return utilitiesPaymentsRepository.findById(id);
-    }
+    private final UtilitiesPaymentsRepository utilitiesPaymentsRepository;
 
     public List<UtilitiesPayments> findAllByUnitNumber(String unitNumber) {
-        List<UtilitiesPayments> utilPayments = utilitiesPaymentsRepository.findAllByUnitNumber(unitNumber);
-        return utilPayments;
+        return utilitiesPaymentsRepository.findAllByUnitNumber(unitNumber);
     }
 
     public List<UtilitiesPayments> findAllUtilitiesPayments() {
@@ -60,9 +54,9 @@ public class UtilitiesPaymentsService {
 
         if (lastUtilPayment.isPresent()) {
             // pending bal /overpayment
-            Double bill = Double.parseDouble(lastUtilPayment.get().getCarriedForward());
-            Double newCarriedForward = Double.parseDouble(utilsReqDto.amountPaid()) + bill;
-            Double carriedForward = newCarriedForward -
+            double bill = Double.parseDouble(lastUtilPayment.get().getCarriedForward());
+            double newCarriedForward = Double.parseDouble(utilsReqDto.amountPaid()) + bill;
+            double carriedForward = newCarriedForward -
                     (Double.parseDouble(utilsReqDto.garbage()) + Double.parseDouble(utilsReqDto.waterBill()));
             String status = carriedForward >= 0 ? "paid" : "unpaid";
 
@@ -108,9 +102,6 @@ public class UtilitiesPaymentsService {
     }
 
     public String deleteUtility(String id) {
-        System.out.print(jwtFilter.isAdmin());
-        if (!jwtFilter.isAdmin())
-            throw new AccessDeniedException("must be admin to delete");
 
         utilitiesPaymentsRepository.findById(id).orElseThrow(
                 () -> new EntityNotFoundException("not found"));
@@ -129,7 +120,7 @@ public class UtilitiesPaymentsService {
             return generate("AllUtilitiesPayments", allUtils);
 
         } catch (DocumentException | IOException e) {
-            log.error("error processing utilities download {}", e.getCause());
+            log.error("error processing utilities download {}", e.getMessage());
             return null;
         }
     }

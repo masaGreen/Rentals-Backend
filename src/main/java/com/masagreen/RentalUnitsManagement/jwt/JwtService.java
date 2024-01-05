@@ -6,15 +6,12 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 
 @Service
@@ -23,28 +20,15 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String secret;
 
-    @PostConstruct
-    public void string() {
-        System.out.println(secret);
-    }
-
-    public String generateToken(AppUser userDetails) {
-        Map<String, Object> extraClaims = new HashMap<>();
-        extraClaims.put("role", userDetails.getRole());
-        return Jwts
+    public String generateToken(AppUser user) {
+             return Jwts
                 .builder()
-                .setClaims(extraClaims)
-                .setSubject(userDetails.getUsername())
+                .setSubject(user.getEmail())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 24 * 365))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
 
-    }
-
-    public String generateTokenWithoutExtraClaims(AppUser user) {
-
-        return generateToken(user);
     }
 
     public Claims extractAllClaims(String token) {
@@ -72,8 +56,7 @@ public class JwtService {
     }
 
     public boolean isTokenValid(String token, UserDetails user) {
-        String toke = extractUsername(token);
-        return (toke.equalsIgnoreCase(user.getUsername()) && !isTokenExpired(token));
+        return (extractUsername(token).equalsIgnoreCase(user.getUsername()) && !isTokenExpired(token));
     }
 
     private Key getSigningKey() {

@@ -10,7 +10,6 @@ import com.masagreen.RentalUnitsManagement.dtos.tenant.StatusUpdateReqDto;
 import com.masagreen.RentalUnitsManagement.dtos.tenant.TenantDTO;
 import com.masagreen.RentalUnitsManagement.dtos.tenant.TenantReqDto;
 import com.masagreen.RentalUnitsManagement.dtos.tenant.TenantsResponseDto;
-import com.masagreen.RentalUnitsManagement.jwt.JwtFilter;
 import com.masagreen.RentalUnitsManagement.models.entities.Tenant;
 import com.masagreen.RentalUnitsManagement.models.entities.Unit;
 import com.masagreen.RentalUnitsManagement.repositories.TenantRepository;
@@ -20,8 +19,6 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,12 +33,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Slf4j
 public class TenantService {
-    @Autowired
-    private TenantRepository tenantRepository;
-    @Autowired
-    private UnitRepository unitRepository;
-    @Autowired
-    private JwtFilter jwtFilter;
+
+    private final TenantRepository tenantRepository;
+    private final UnitRepository unitRepository;
 
     public TenantsResponseDto findAllTenants() {
         List<TenantDTO> tenantDTOs = tenantRepository.findAll().stream().map(u -> new TenantDTO(u)).toList();
@@ -81,14 +75,14 @@ public class TenantService {
             return generate("All Tenants With Arrears", tenants);
 
         } catch (DocumentException | IOException e) {
-            log.error("error processing tenants with arrears download {}", e.getCause());
+            log.error("error processing tenants with arrears download {}", e.getMessage());
             return null;
         }
     }
 
     public TenantsResponseDto getAllTenantsWithArrears() {
 
-        List<TenantDTO> tenantDTOs = tenantRepository.findAllTenantsWithArrears().stream().map(u -> new TenantDTO(u))
+        List<TenantDTO> tenantDTOs = tenantRepository.findAllTenantsWithArrears().stream().map(TenantDTO::new)
                 .toList();
 
         return TenantsResponseDto.builder().tenants(tenantDTOs).build();
@@ -144,20 +138,13 @@ public class TenantService {
         Tenant tenant = tenantRepository.findById(id).orElseThrow(
                 () -> new EntityNotFoundException("tenant does not exist"));
 
-
-        if (jwtFilter.isAdmin()) {
-
-            tenantRepository.deleteById(id);
-            Unit unit = unitRepository.findByUnitNumber(tenant.getUnitNumber()).orElseThrow(
-                    () -> new EntityNotFoundException("unit to be assigned not found"));
-            // make the unit available
-            unit.setStatus(true);
-            unitRepository.save(unit);
-            return CommonResponseMessageDto.builder().message("deleted successfully").build();
-
-        } else {
-            throw new AccessDeniedException("Unauthorized, must be an admin");
-        }
+        tenantRepository.deleteById(id);
+        Unit unit = unitRepository.findByUnitNumber(tenant.getUnitNumber()).orElseThrow(
+                () -> new EntityNotFoundException("unit to be assigned not found"));
+        // make the unit available
+        unit.setStatus(true);
+        unitRepository.save(unit);
+        return CommonResponseMessageDto.builder().message("deleted successfully").build();
 
     }
 
@@ -170,16 +157,12 @@ public class TenantService {
 
     public CommonResponseMessageDto updatePaymentStatus(StatusUpdateReqDto statusUpdateReqDto) {
 
-        if (jwtFilter.isAdmin()) {
-            Tenant tenant = tenantRepository.findByPhone(statusUpdateReqDto.phone()).orElseThrow(
-                    () -> new EntityNotFoundException("tenant not found"));
+        Tenant tenant = tenantRepository.findByPhone(statusUpdateReqDto.phone()).orElseThrow(
+                () -> new EntityNotFoundException("tenant not found"));
 
-            tenant.setPayStatus(statusUpdateReqDto.payStatus());
-            tenantRepository.save(tenant);
-            return CommonResponseMessageDto.builder().message("updated successfully").build();
-        } else {
-            throw new AccessDeniedException("Unauthorized, must be admin");
-        }
+        tenant.setPayStatus(statusUpdateReqDto.payStatus());
+        tenantRepository.save(tenant);
+        return CommonResponseMessageDto.builder().message("updated successfully").build();
 
     }
 

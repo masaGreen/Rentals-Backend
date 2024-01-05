@@ -17,6 +17,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -141,6 +142,7 @@ public class UtilitiesController {
     })
 
     @DeleteMapping("/deleteUtilities/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<CommonResponseMessageDto> deleteUtility(@PathVariable("id") String id) {
 
         return new ResponseEntity<>(CommonResponseMessageDto.builder()

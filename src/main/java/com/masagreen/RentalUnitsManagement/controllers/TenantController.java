@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Objects;
@@ -131,11 +132,12 @@ public class TenantController {
 
     })
     @DeleteMapping("/deleteTenant/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<?> deleteTenant(@PathVariable("id") String id) {
         return new ResponseEntity<>(tenantService.deleteTenant(id), HttpStatus.OK);
     }
 
-    @Operation(summary = " Endpoint tfetch a tenant by his phone")
+    @Operation(summary = " Endpoint fetch a tenant by his phone")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "fetched tenant successfully", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = TenantDTO.class))}),
@@ -159,6 +161,7 @@ public class TenantController {
 
     })
     @PostMapping("/updatePaymentStatus")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<CommonResponseMessageDto> updatePaymentStatus(
             @RequestBody StatusUpdateReqDto statusUpdateReqDto) {
 

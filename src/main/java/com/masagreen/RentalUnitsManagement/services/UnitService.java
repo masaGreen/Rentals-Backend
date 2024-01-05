@@ -65,7 +65,7 @@ public class UnitService {
 
 
         } catch (DocumentException | IOException e) {
-            log.error("error processing units download {}", e.getCause());
+            log.error("error processing units download {}", e.getMessage());
             return null;
         }
 

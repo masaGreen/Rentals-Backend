@@ -10,9 +10,9 @@ import com.masagreen.RentalUnitsManagement.models.entities.AppUser;
 import com.masagreen.RentalUnitsManagement.repositories.AppUserRepository;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -38,12 +38,9 @@ public class AppUserService {
     private final JwtFilter jwtFilter;
 
 
-    // using email as my username
-
     public AppUser findAppUserByEmail(String email, String errorMessage) {
-        AppUser user = appUserRepository.findByEmail(email).orElseThrow(
+        return appUserRepository.findByEmail(email).orElseThrow(
                 () -> new EntityNotFoundException(errorMessage));
-        return user;
     }
 
     public SignUpResponseDto saveUser(SignUpReqDto signUpReqDto) {
@@ -108,7 +105,7 @@ public class AppUserService {
     }
 
     public CommonResponseMessageDto manageUserStatus(ApprovalDto approvalDto) {
-        if (jwtFilter.isAdmin()) {
+
             AppUser user = findAppUserByEmail(approvalDto.email(), "not found");
             user.setStatus(!user.isStatus());
 
@@ -117,9 +114,7 @@ public class AppUserService {
             // notify other admins via mail
 
             return CommonResponseMessageDto.builder().message("user status changed").build();
-        } else {
-            throw new AccessDeniedException("Unauthorized, must be admin");
-        }
+
 
     }
 
@@ -135,10 +130,10 @@ public class AppUserService {
 
     }
 
-    public CommonResponseMessageDto handleChangePassword(ChangePasswordReqDto changePasswordReqDto) {
+    public CommonResponseMessageDto handleChangePassword(ChangePasswordReqDto changePasswordReqDto, HttpServletRequest request) {
 
         //must be logged in
-        AppUser loggedUser = findAppUserByEmail(jwtFilter.getCurrentUserEmail(), "email user must be logged in");
+        AppUser loggedUser = findAppUserByEmail((String) request.getAttribute("email"), "email user must be logged in");
 
 
         if (passwordEncoder.matches(changePasswordReqDto.getOldPassword(), loggedUser.getPassword())) {
@@ -158,7 +153,7 @@ public class AppUserService {
 
         List<AppUser> users = appUserRepository.findAll();
 
-        List<UserDTO> usersDtos = users.stream().map(user -> new UserDTO(user)).toList();
+        List<UserDTO> usersDtos = users.stream().map(UserDTO::new).toList();
 
         return UsersResponseDto.builder().users(usersDtos).build();
 
@@ -166,15 +161,12 @@ public class AppUserService {
 
 
     public CommonResponseMessageDto deleteAppUser(String id) {
-        Boolean existsById = appUserRepository.existsById(id);
+        boolean existsById = appUserRepository.existsById(id);
         if (existsById) {
-            if (jwtFilter.isAdmin()) {
+
                 appUserRepository.deleteById(id);
                 // notifyAdmins(jwtFilter.getCurrentUserEmail(), "Deletion");
                 return CommonResponseMessageDto.builder().message("successfully deleted").build();
-            } else {
-                throw new AccessDeniedException("Unauthorized, must be admin");
-            }
         } else {
             throw new EntityNotFoundException("user doesn't exist");
         }

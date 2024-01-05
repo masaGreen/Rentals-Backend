@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -84,6 +85,14 @@ public class GlobalExceptionsHadler extends ResponseEntityExceptionHandler {
         ExceptionsObject exceptionsObject = ExceptionsObject.withSingleMessage(new Date(), ex.getMessage(),
                 HttpStatus.NOT_FOUND.value());
         return new ResponseEntity<>(exceptionsObject, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(InsufficientAuthenticationException.class)
+    public ResponseEntity<Object> handleInsufficientAuthenticationException(InsufficientAuthenticationException ex) {
+        log.error("logging {}", ex.getMessage());
+        ExceptionsObject exceptionsObject = ExceptionsObject.withSingleMessage(new Date(), ex.getMessage(),
+                HttpStatus.UNAUTHORIZED.value());
+        return new ResponseEntity<>(exceptionsObject, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(EntityExistsException.class)

@@ -11,10 +11,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/v1/auth")
@@ -31,7 +33,8 @@ public class AuthController {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = UsersResponseDto.class))})
     })
     @SecurityRequirement(name = "bearerAuth")
-    @GetMapping
+    @GetMapping("/all-users")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<UsersResponseDto> fetchAllUsers() {
         return new ResponseEntity<>(appUserService.findAllUsers(), HttpStatus.OK);
     }
@@ -73,6 +76,7 @@ public class AuthController {
     })
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/approveUser")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<CommonResponseMessageDto> updateUser(@RequestBody ApprovalDto approvalDto) {
 
         return new ResponseEntity<>(appUserService.manageUserStatus(approvalDto), HttpStatus.ACCEPTED);
@@ -118,8 +122,8 @@ public class AuthController {
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/changePassword")
     public ResponseEntity<CommonResponseMessageDto> changePassword(
-            @Valid @RequestBody ChangePasswordReqDto changePasswordReqDto) {
-        return new ResponseEntity<>(appUserService.handleChangePassword(changePasswordReqDto), HttpStatus.ACCEPTED);
+            @Valid @RequestBody ChangePasswordReqDto changePasswordReqDto, HttpServletRequest request) {
+        return new ResponseEntity<>(appUserService.handleChangePassword(changePasswordReqDto, request), HttpStatus.ACCEPTED);
     }
 
     @Operation(summary = " Endpoint to delete a user")
@@ -131,6 +135,7 @@ public class AuthController {
     })
     @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/deleteUser/{id}")
+    @PreAuthorize("hasAuthority('ROLE_STAFF)")
     public ResponseEntity<CommonResponseMessageDto> deleteTenant(@PathVariable("id") String id) {
         return new ResponseEntity<>(appUserService.deleteAppUser(id), HttpStatus.ACCEPTED);
     }
