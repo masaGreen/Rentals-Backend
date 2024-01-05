@@ -1,7 +1,7 @@
 package com.masagreen.RentalUnitsManagement.exceptions;
 
-public class UserNotValidatedException extends RuntimeException{
-    public UserNotValidatedException(String message){
+public class UserNotValidatedException extends RuntimeException {
+    public UserNotValidatedException(String message) {
         super(message);
     }
 }

@@ -7,40 +7,34 @@ import io.swagger.v3.oas.annotations.info.Contact;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.servers.Server;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.Comparator;
-import java.util.stream.Collectors;
 
 
 @OpenAPIDefinition(
         info = @Info(
                 title = "OpenApi Docs for Rental-Units-Management-System",
                 description = "OpenApi Docs for Rental-Units-Management-System",
-                termsOfService="link to terms of service",
+                termsOfService = "link to terms of service",
                 contact = @Contact(email = "davidmachariamj@gmail.com")
         ),
         servers = {
-                @Server(url = "http://localhost:8080", description="Dev Env")
+                @Server(url = "http://localhost:8080", description = "Dev Env")
         }
 
 
 )
- @SecurityScheme(
-         name = "bearerAuth",
-         description = "enter the jwt token",
-         scheme = "bearer",
-         type = SecuritySchemeType.HTTP,
-         bearerFormat = "JWT",
-         in = SecuritySchemeIn.HEADER
- )
+@SecurityScheme(
+        name = "bearerAuth",
+        description = "enter the jwt token",
+        scheme = "bearer",
+        type = SecuritySchemeType.HTTP,
+        bearerFormat = "JWT",
+        in = SecuritySchemeIn.HEADER
+)
 @Configuration
 @ComponentScan(basePackages = {"com.masagreen."})
 class SwaggerConfig {
-
 
 
 }

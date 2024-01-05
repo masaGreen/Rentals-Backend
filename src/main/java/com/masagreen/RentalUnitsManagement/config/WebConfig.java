@@ -1,5 +1,7 @@
 package com.masagreen.RentalUnitsManagement.config;
 
+import com.masagreen.RentalUnitsManagement.jwt.JwtAuthenticationEntryPoint;
+import com.masagreen.RentalUnitsManagement.jwt.JwtFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -15,10 +17,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
-import com.masagreen.RentalUnitsManagement.jwt.JwtAuthenticationEntryPoint;
-// import com.masagreen.RentalUnitsManagement.jwt.JwtAuthenticationEntryPoint;
-import com.masagreen.RentalUnitsManagement.jwt.JwtFilter;
-
 @EnableWebSecurity
 @Configuration
 public class WebConfig {
@@ -28,11 +26,11 @@ public class WebConfig {
             "/swagger-ui.html",
             "swagger-ui/**",
             "/v3/api-docs/**",
-            "/auth/validate-email/**"
-            };
-@Autowired
-private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-@Autowired
+            "/v1/auth/validate-email/**"
+    };
+    @Autowired
+    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    @Autowired
     @Qualifier("handlerExceptionResolver")
     public HandlerExceptionResolver handlerExceptionResolver;
 
@@ -42,12 +40,12 @@ private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
 
     @Bean
-    public JwtFilter jwtFilter(){
+    public JwtFilter jwtFilter() {
         return new JwtFilter(handlerExceptionResolver);
     }
 
-     @Bean
-      public SecurityFilterChain securityFilterChain1(HttpSecurity http) throws Exception {
+    @Bean
+    public SecurityFilterChain securityFilterChain1(HttpSecurity http) throws Exception {
         http
                 .cors(Customizer.withDefaults())
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
@@ -57,20 +55,16 @@ private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
                     auth.requestMatchers(allowedList).permitAll();
                     auth.anyRequest().authenticated();
-                            ;
 
                 })
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(exceptionHandling->exceptionHandling.authenticationEntryPoint(jwtAuthenticationEntryPoint));
-               
+                .exceptionHandling(exceptionHandling -> exceptionHandling.authenticationEntryPoint(jwtAuthenticationEntryPoint));
+
 
         return http.build();
 
     }
 
-
-
-    
 
 }

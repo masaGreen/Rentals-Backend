@@ -21,11 +21,11 @@
     </appender>
 
     <root level="DEBUG">
-        <appender-ref ref="Console" />
+        <appender-ref ref="Console"/>
     </root>
 
     <logger name="com.masagreen" level="DEBUG" additivity="false">
-        <appender-ref ref="Console" />
+        <appender-ref ref="Console"/>
     </logger>
 
     <logger name="org.springframework.security" level="DEBUG" additivity="false">

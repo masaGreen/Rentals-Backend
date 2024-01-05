@@ -1,9 +1,8 @@
-
 package com.masagreen.RentalUnitsManagement.controllers;
 
 import com.masagreen.RentalUnitsManagement.dtos.CommonResponseMessageDto;
 import com.masagreen.RentalUnitsManagement.dtos.auth.*;
-
+import com.masagreen.RentalUnitsManagement.services.AppUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -12,16 +11,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-
-import com.masagreen.RentalUnitsManagement.services.AppUserService;
-import org.springframework.web.bind.annotation.*;
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/v1/auth")
 @RestController
@@ -34,9 +28,9 @@ public class AuthController {
     @Operation(summary = " Endpoint to fetch all users")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "fetched successfully.", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = UsersResponseDto.class)) })
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = UsersResponseDto.class))})
     })
-    @SecurityRequirement(name="bearerAuth")
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping
     public ResponseEntity<UsersResponseDto> fetchAllUsers() {
         return new ResponseEntity<>(appUserService.findAllUsers(), HttpStatus.OK);
@@ -45,7 +39,7 @@ public class AuthController {
     @Operation(summary = " endpoint to sign up user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "saved successfully", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = SignUpResponseDto.class)) }),
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = SignUpResponseDto.class))}),
             @ApiResponse(responseCode = "409", description = "User exists", content = @Content(examples = @ExampleObject(value = "{'message': 'email already signedup, login'}"))),
 
     })
@@ -58,7 +52,7 @@ public class AuthController {
     @Operation(summary = " Endpoint to log user with email and password")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "logged in successfully", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = LoginResponseDTO.class)) }),
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = LoginResponseDTO.class))}),
             @ApiResponse(responseCode = "404", description = "email not signed up", content = @Content(examples = @ExampleObject(value = "{'message': 'email not signed up'}"))),
             @ApiResponse(responseCode = "403", description = "invalid credentials", content = @Content(examples = @ExampleObject(value = "{'message': 'wrong credentials or you are have not been approved'}"))),
 
@@ -72,7 +66,7 @@ public class AuthController {
     @Operation(summary = " Endpoint for admin to approve other users")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "user approved successfully", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = CommonResponseMessageDto.class)) }),
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = CommonResponseMessageDto.class))}),
             @ApiResponse(responseCode = "404", description = "email not signed up", content = @Content(examples = @ExampleObject(value = "{'message': 'email not signed up'}"))),
             @ApiResponse(responseCode = "403", description = "must be admin to approve", content = @Content(examples = @ExampleObject(value = "{'message': 'wrong credentials or you are not admin'}"))),
 
@@ -88,7 +82,7 @@ public class AuthController {
     @Operation(summary = "validate user email")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "email validated successfully", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = CommonResponseMessageDto.class)) }),
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = CommonResponseMessageDto.class))}),
             @ApiResponse(responseCode = "404", description = "email not signed up", content = @Content(examples = @ExampleObject(value = "{'message': 'email not signed up'}"))),
     })
     @GetMapping("/validate-email/{code}")
@@ -98,10 +92,10 @@ public class AuthController {
 
     }
 
-        @Operation(summary = " Endpoint to handle forgotten password")
+    @Operation(summary = " Endpoint to handle forgotten password")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "new pasword sent to email successfully", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = CommonResponseMessageDto.class)) }),
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = CommonResponseMessageDto.class))}),
 
             @ApiResponse(responseCode = "404", description = "email not signed up", content = @Content(examples = @ExampleObject(value = "{'message': 'email not signed up'}"))),
 
@@ -116,7 +110,7 @@ public class AuthController {
     @Operation(summary = " Endpoint change user's password")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "passssword changed successfully", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = CommonResponseMessageDto.class)) }),
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = CommonResponseMessageDto.class))}),
 
             @ApiResponse(responseCode = "403", description = "mismatching passwords", content = @Content(examples = @ExampleObject(value = "{'message': 'passwords dont match'}"))),
 
@@ -131,7 +125,7 @@ public class AuthController {
     @Operation(summary = " Endpoint to delete a user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "deleted successfully", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = CommonResponseMessageDto.class)) }),
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = CommonResponseMessageDto.class))}),
 
             @ApiResponse(responseCode = "403", description = "not authorized", content = @Content(examples = @ExampleObject(value = "{'message': 'only admin can delete a suer'}"))),
     })
@@ -140,8 +134,6 @@ public class AuthController {
     public ResponseEntity<CommonResponseMessageDto> deleteTenant(@PathVariable("id") String id) {
         return new ResponseEntity<>(appUserService.deleteAppUser(id), HttpStatus.ACCEPTED);
     }
-
-
 
 
     // private void notifyAdmins(String email, String message){

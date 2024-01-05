@@ -16,13 +16,10 @@ import com.masagreen.RentalUnitsManagement.models.entities.Unit;
 import com.masagreen.RentalUnitsManagement.repositories.TenantRepository;
 import com.masagreen.RentalUnitsManagement.repositories.UnitRepository;
 import com.masagreen.RentalUnitsManagement.utils.ProcessDownloadResponse;
-
-
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -53,25 +50,25 @@ public class TenantService {
 
     }
 
-  
-    public byte[] downloadAllTenants(HttpServletResponse response){
-       
+
+    public byte[] downloadAllTenants(HttpServletResponse response) {
+
         List<Tenant> tenants = tenantRepository.findAll();
-        
+
 
         ProcessDownloadResponse.processResponse(response);
-       
+
         try {
             log.info("preparing pdf for all tenants");
             return generate("All Tenants", tenants);
-            
-            
+
+
         } catch (DocumentException | IOException e) {
             log.error("error processing tenants download {}", e.getMessage());
             return null;
         }
 
-   }
+    }
 
     public byte[] handleAllTenantsWithArrearsDownloads(HttpServletResponse response) {
 
@@ -82,7 +79,7 @@ public class TenantService {
         try {
             log.info("preparing pdf for all tennats");
             return generate("All Tenants With Arrears", tenants);
-            
+
         } catch (DocumentException | IOException e) {
             log.error("error processing tenants with arrears download {}", e.getCause());
             return null;
@@ -116,7 +113,7 @@ public class TenantService {
                 tenant.setFirstName(tenantReqDto.firstName());
                 tenant.setLastName(tenantReqDto.lastName());
                 tenant.setPhone(tenantReqDto.phone());
-                tenant.setStart(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MMM-dd")).toString());
+                tenant.setStart(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MMM-dd")));
                 tenant.setEnded(null);
                 tenant.setPayStatus("unpaid");
                 tenant.setUnitNumber(tenantReqDto.unitNumber());
@@ -146,8 +143,7 @@ public class TenantService {
     public CommonResponseMessageDto deleteTenant(String id) {
         Tenant tenant = tenantRepository.findById(id).orElseThrow(
                 () -> new EntityNotFoundException("tenant does not exist"));
-        
-    
+
 
         if (jwtFilter.isAdmin()) {
 
@@ -187,12 +183,12 @@ public class TenantService {
 
     }
 
-    private byte[] generate( String title, List<Tenant> tenants)
+    private byte[] generate(String title, List<Tenant> tenants)
             throws DocumentException, IOException {
 
         Document document = new Document(PageSize.A4);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        PdfWriter pdfWriter =PdfWriter.getInstance(document, byteArrayOutputStream);
+        PdfWriter pdfWriter = PdfWriter.getInstance(document, byteArrayOutputStream);
 
         document.open();
 
@@ -207,7 +203,7 @@ public class TenantService {
         PdfPTable table = new PdfPTable(6);
 
         table.setWidthPercentage(100f);
-        table.setWidths(new int[] { 1, 1, 1, 1, 1, 1 });
+        table.setWidths(new int[]{1, 1, 1, 1, 1, 1});
         table.setSpacingBefore(3);
 
         PdfPCell cell = new PdfPCell();

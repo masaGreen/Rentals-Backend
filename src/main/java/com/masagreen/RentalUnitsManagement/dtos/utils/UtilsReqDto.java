@@ -1,11 +1,11 @@
 package com.masagreen.RentalUnitsManagement.dtos.utils;
 
 
-public record UtilsReqDto (
+public record UtilsReqDto(
 
-     String waterBill,
-     String garbage,
-     String amountPaid,
-     String unitNumber)
-{}
+        String waterBill,
+        String garbage,
+        String amountPaid,
+        String unitNumber) {
+}
 

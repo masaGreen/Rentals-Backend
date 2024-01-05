@@ -1,15 +1,11 @@
 package com.masagreen.RentalUnitsManagement.models.entities;
 
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.masagreen.RentalUnitsManagement.models.SuperClass;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import lombok.*;
 
 import java.time.LocalDateTime;
-
-import com.masagreen.RentalUnitsManagement.models.SuperClass;
 
 @Entity
 @Getter
@@ -17,17 +13,17 @@ import com.masagreen.RentalUnitsManagement.models.SuperClass;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UtilitiesPayments  extends SuperClass{
-    
+public class UtilitiesPayments extends SuperClass {
+
     private LocalDateTime date;
-    @Column(name="waterbill")
+    @Column(name = "waterbill")
     private String waterBill;
     private String garbage;
-    @Column(name="unitnumber")
+    @Column(name = "unitnumber")
     private String unitNumber;
-    @Column(name="amountpaid")
+    @Column(name = "amountpaid")
     private String amountPaid;
     private String carriedForward;
     private String status;
-    
+
 }

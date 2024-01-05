@@ -1,10 +1,10 @@
 package com.masagreen.RentalUnitsManagement.exceptions;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.security.SignatureException;
+import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -21,11 +21,10 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.security.SignatureException;
-import jakarta.persistence.EntityExistsException;
-import jakarta.persistence.EntityNotFoundException;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @ControllerAdvice
 @Slf4j
@@ -33,7 +32,7 @@ public class GlobalExceptionsHadler extends ResponseEntityExceptionHandler {
 
     @Override
     protected ResponseEntity<Object> handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException ex,
-            HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+                                                                         HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         log.error("logging {}", ex.getMessage());
         ExceptionsObject exceptionsObject = ExceptionsObject.withSingleMessage(new Date(), ex.getMessage(),
                 HttpStatus.METHOD_NOT_ALLOWED.value());
@@ -42,7 +41,7 @@ public class GlobalExceptionsHadler extends ResponseEntityExceptionHandler {
 
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
-            HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+                                                                  HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         log.error("logging {}", ex.getMessage());
         Map<String, String> eMap = new HashMap<>();
 
@@ -64,7 +63,15 @@ public class GlobalExceptionsHadler extends ResponseEntityExceptionHandler {
 
     @Override
     protected ResponseEntity<Object> handleNoHandlerFoundException(NoHandlerFoundException ex, HttpHeaders headers,
-            HttpStatusCode status, WebRequest request) {
+                                                                   HttpStatusCode status, WebRequest request) {
+        log.error("logging {}", ex.getMessage());
+        ExceptionsObject exceptionsObject = ExceptionsObject.withSingleMessage(new Date(), ex.getMessage(),
+                HttpStatus.BAD_REQUEST.value());
+        return new ResponseEntity<>(exceptionsObject, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(WrongEmailValidationCode.class)
+    public ResponseEntity<Object> handleWrongEmailValidationCode(WrongEmailValidationCode ex) {
         log.error("logging {}", ex.getMessage());
         ExceptionsObject exceptionsObject = ExceptionsObject.withSingleMessage(new Date(), ex.getMessage(),
                 HttpStatus.BAD_REQUEST.value());
@@ -151,8 +158,9 @@ public class GlobalExceptionsHadler extends ResponseEntityExceptionHandler {
                 HttpStatus.UNAUTHORIZED.value());
         return new ResponseEntity<>(exceptionsObject, HttpStatus.UNAUTHORIZED);
     }
+
     @ExceptionHandler(DeletionNotAllowedCurrentlyException.class)
-     public ResponseEntity<Object> handleDeletionNotAllowedCurrentlyException(DeletionNotAllowedCurrentlyException ex) {
+    public ResponseEntity<Object> handleDeletionNotAllowedCurrentlyException(DeletionNotAllowedCurrentlyException ex) {
         log.error("logging {}", ex.getMessage());
         ExceptionsObject exceptionsObject = ExceptionsObject.withSingleMessage(new Date(), ex.getMessage(),
                 HttpStatus.UNAUTHORIZED.value());

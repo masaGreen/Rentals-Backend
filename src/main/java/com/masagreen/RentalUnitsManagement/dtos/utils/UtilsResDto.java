@@ -1,12 +1,10 @@
 package com.masagreen.RentalUnitsManagement.dtos.utils;
 
+import com.masagreen.RentalUnitsManagement.models.entities.UtilitiesPayments;
 import lombok.Builder;
 import lombok.Data;
 
-
 import java.util.List;
-
-import com.masagreen.RentalUnitsManagement.models.entities.UtilitiesPayments;
 
 @Builder
 @Data

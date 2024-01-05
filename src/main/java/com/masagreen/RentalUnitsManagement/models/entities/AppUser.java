@@ -1,21 +1,15 @@
 package com.masagreen.RentalUnitsManagement.models.entities;
 
-import java.util.Collection;
-import java.util.Collections;
-
+import com.masagreen.RentalUnitsManagement.models.SuperClass;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.masagreen.RentalUnitsManagement.models.SuperClass;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import java.util.Collection;
+import java.util.Collections;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -25,7 +19,7 @@ import lombok.Setter;
 @Entity
 @Table(name = "users")
 public class AppUser extends SuperClass implements UserDetails {
-    
+
 
     private String email;
 

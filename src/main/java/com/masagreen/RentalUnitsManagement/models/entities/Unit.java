@@ -2,13 +2,10 @@ package com.masagreen.RentalUnitsManagement.models.entities;
 
 
 import com.masagreen.RentalUnitsManagement.models.SuperClass;
-
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import lombok.*;
 
 @Entity
 @NoArgsConstructor
@@ -16,17 +13,16 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-@Table(name="units")
-public class Unit extends SuperClass{
-    
-    @Column(name="plotname")
+@Table(name = "units")
+public class Unit extends SuperClass {
+
+    @Column(name = "plotname")
     private String plotName;
-    @Column(name="unitnumber")
+    @Column(name = "unitnumber")
     private String unitNumber;
-    private  String tag;
+    private String tag;
     private boolean status;
     private int rent;
 
 
-    
 }

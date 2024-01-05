@@ -13,12 +13,12 @@ import lombok.NoArgsConstructor;
 @Builder
 
 public class SignUpReqDto {
-    @Email(message="invalid email")
+    @Email(message = "invalid email")
     @NotBlank
     private String email;
 
     // @Size(min= 4,max= 8, message="must be longer than 4 characters")
     private String password;
-    @NotBlank(message="role must not be empty")
+    @NotBlank(message = "role must not be empty")
     private String role;
 }

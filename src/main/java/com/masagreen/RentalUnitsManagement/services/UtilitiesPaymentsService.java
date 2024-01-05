@@ -1,5 +1,6 @@
 package com.masagreen.RentalUnitsManagement.services;
 
+import com.lowagie.text.*;
 import com.lowagie.text.pdf.CMYKColor;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
@@ -10,21 +11,12 @@ import com.masagreen.RentalUnitsManagement.jwt.JwtFilter;
 import com.masagreen.RentalUnitsManagement.models.entities.UtilitiesPayments;
 import com.masagreen.RentalUnitsManagement.repositories.UtilitiesPaymentsRepository;
 import com.masagreen.RentalUnitsManagement.utils.ProcessDownloadResponse;
-
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-import com.lowagie.text.Document;
-import com.lowagie.text.DocumentException;
-import com.lowagie.text.Font;
-import com.lowagie.text.FontFactory;
-import com.lowagie.text.PageSize;
-import com.lowagie.text.Paragraph;
-import com.lowagie.text.Phrase;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -65,7 +57,7 @@ public class UtilitiesPaymentsService {
         // does the unit have some pending payments
         Optional<UtilitiesPayments> lastUtilPayment = utilitiesPaymentsRepository
                 .findByUnitNumber(utilsReqDto.unitNumber());
-      
+
         if (lastUtilPayment.isPresent()) {
             // pending bal /overpayment
             Double bill = Double.parseDouble(lastUtilPayment.get().getCarriedForward());
@@ -92,7 +84,7 @@ public class UtilitiesPaymentsService {
             return CommonResponseMessageDto.builder().message("successfully saved").build();
 
         } else {
-           
+
             Double carriedForward = Double.parseDouble(utilsReqDto.amountPaid()) - (Double.parseDouble(
                     utilsReqDto.garbage()) + Double.parseDouble(utilsReqDto.waterBill()));
 
@@ -196,7 +188,7 @@ public class UtilitiesPaymentsService {
         PdfPTable table = new PdfPTable(7);
 
         table.setWidthPercentage(100f);
-        table.setWidths(new int[] { 2, 2, 2, 2, 2, 2, 2 });
+        table.setWidths(new int[]{2, 2, 2, 2, 2, 2, 2});
         table.setSpacingBefore(5);
 
         PdfPCell cell = new PdfPCell();

@@ -12,13 +12,11 @@ import com.masagreen.RentalUnitsManagement.exceptions.DeletionNotAllowedCurrentl
 import com.masagreen.RentalUnitsManagement.models.entities.Unit;
 import com.masagreen.RentalUnitsManagement.repositories.UnitRepository;
 import com.masagreen.RentalUnitsManagement.utils.ProcessDownloadResponse;
-
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -32,104 +30,107 @@ import java.util.List;
 public class UnitService {
 
     private final UnitRepository unitRepository;
+
     public CommonResponseMessageDto saveUnit(UnitReqDto unitReqDto) {
         //check if already exists
         Boolean isExistent = unitRepository.existsByUnitNumber(unitReqDto.unitNumber());
-        if(isExistent) {
+        if (isExistent) {
             throw new EntityExistsException("unit already exists");
-        }else{
+        } else {
             Unit unit = Unit.builder()
-                .plotName(unitReqDto.plotName())
-                .unitNumber(unitReqDto.plotName()+unitReqDto.unitNumber())
-                .tag(unitReqDto.tag())
-                .status(true)
-                .rent(unitReqDto.rent())
-                .build();
+                    .plotName(unitReqDto.plotName())
+                    .unitNumber(unitReqDto.plotName() + unitReqDto.unitNumber())
+                    .tag(unitReqDto.tag())
+                    .status(true)
+                    .rent(unitReqDto.rent())
+                    .build();
             unitRepository.save(unit);
             return CommonResponseMessageDto.builder().message("unit successfully created").build();
         }
-            
+
 
     }
 
 
-    public byte[] downloadAllUnits(HttpServletResponse response){
-       
+    public byte[] downloadAllUnits(HttpServletResponse response) {
+
         List<Unit> units = unitRepository.findAll();
-        
+
 
         ProcessDownloadResponse.processResponse(response);
-       
+
         try {
             log.info("preparing pdf for all units");
             return generate("All Units", units);
-            
-            
+
+
         } catch (DocumentException | IOException e) {
             log.error("error processing units download {}", e.getCause());
             return null;
         }
 
-   }
-    public UnitDataResponseDto getAvailableUnits(){
-        
-        List<Unit> units = unitRepository.findAllUnitsAvailable();
-
-        return UnitDataResponseDto.builder().units(units).build(); 
-      
-       
     }
 
-    public Unit getByUnitNumber(String id){
-       Unit unit = unitRepository.findById(id).orElseThrow(
-            ()->new EntityNotFoundException("unit not found")
-            );
+    public UnitDataResponseDto getAvailableUnits() {
+
+        List<Unit> units = unitRepository.findAllUnitsAvailable();
+
+        return UnitDataResponseDto.builder().units(units).build();
+
+
+    }
+
+    public Unit getByUnitNumber(String id) {
+        Unit unit = unitRepository.findById(id).orElseThrow(
+                () -> new EntityNotFoundException("unit not found")
+        );
         return unit;
 
     }
 
-    public CommonResponseMessageDto updateAvailability(String unitNumber){
+    public CommonResponseMessageDto updateAvailability(String unitNumber) {
         Unit unit = unitRepository.findByUnitNumber(unitNumber).orElseThrow(
-            ()->new EntityNotFoundException("unit not found")
-            );
-            
+                () -> new EntityNotFoundException("unit not found")
+        );
+
         unit.setStatus(!(unit.isStatus()));
 
         unitRepository.save(unit);
-        
+
         return CommonResponseMessageDto.builder().message("status successfully changed").build();
-            
+
     }
-     public UnitDataResponseDto findAllUnits() {
-                
+
+    public UnitDataResponseDto findAllUnits() {
+
         List<Unit> units = unitRepository.findAll();
         return UnitDataResponseDto.builder().units(units).build();
-       
+
     }
 
     public CommonResponseMessageDto deleteUnit(String id) {
 
-        Unit unit = unitRepository.findById(id).orElseThrow(()->new EntityNotFoundException("unit by id: "+ id + "does not exist"));
-        
-        if(unit.isStatus()){
-             unitRepository.deleteById(id);
-             return CommonResponseMessageDto.builder().message("deleted successfully").build();
+        Unit unit = unitRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("unit by id: " + id + "does not exist"));
 
-        }else{
+        if (unit.isStatus()) {
+            unitRepository.deleteById(id);
+            return CommonResponseMessageDto.builder().message("deleted successfully").build();
+
+        } else {
             throw new DeletionNotAllowedCurrentlyException("can't delete occupied unit, delete tenant first");
         }
-       
-        
-        
+
+
     }
-    private byte[] generate( String title, List<Unit> units) throws DocumentException, IOException {
+
+    private byte[] generate(String title, List<Unit> units) throws DocumentException, IOException {
 
 
         Document document = new Document(PageSize.A4);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
         // Create a PdfWriter to write the document to the ByteArrayOutputStream
-        
+
 
         PdfWriter writer = PdfWriter.getInstance(document, byteArrayOutputStream);
 
@@ -148,7 +149,7 @@ public class UnitService {
 
 
         table.setWidthPercentage(100f);
-        table.setWidths(new int[]{2, 2, 2, 2,2});
+        table.setWidths(new int[]{2, 2, 2, 2, 2});
         table.setSpacingBefore(5);
 
 
@@ -176,7 +177,7 @@ public class UnitService {
 
 
         // Iterating over the list of utils
-        for (Unit unit: units) {
+        for (Unit unit : units) {
 
             table.addCell(unit.getPlotName());
             table.addCell(unit.getUnitNumber());
@@ -188,18 +189,12 @@ public class UnitService {
 
         document.add(table);
 
-        
+
         document.close();
         writer.close();
         return byteArrayOutputStream.toByteArray();
 
     }
-  
-    
-
-   
-
-    
 
 
 }

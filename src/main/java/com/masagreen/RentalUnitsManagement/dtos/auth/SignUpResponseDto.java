@@ -1,4 +1,3 @@
-
 package com.masagreen.RentalUnitsManagement.dtos.auth;
 
 import lombok.AllArgsConstructor;
@@ -12,8 +11,8 @@ import lombok.NoArgsConstructor;
 @Builder
 public class SignUpResponseDto {
     private String id;
-    
+
     private String email;
-   
+
 }
 

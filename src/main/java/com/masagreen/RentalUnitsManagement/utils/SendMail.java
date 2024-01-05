@@ -1,25 +1,21 @@
 package com.masagreen.RentalUnitsManagement.utils;
 
-import java.util.UUID;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
 
-import lombok.extern.slf4j.Slf4j;
+import java.util.UUID;
 
 @Component
 @Slf4j
 public class SendMail {
-    
 
 
     @Value("${mail.originmail}")
     private String originmail;
-    
+
     public void sendPassword(
-      String to, String subject) {
+            String to, String subject) {
         String randomPassword = UUID.randomUUID().toString().substring(0, 4);
         log.info(randomPassword);
 //        SimpleMailMessage message = new SimpleMailMessage();
@@ -29,10 +25,11 @@ public class SendMail {
 //        message.setSubject(subject);
 //        message.setText( randomPassword );
 //        emailSender.send(message);
-      
+
     }
-    public void sendApprovedBy(String[] to, String subject, String content){
-       
+
+    public void sendApprovedBy(String[] to, String subject, String content) {
+
 //        SimpleMailMessage message = new SimpleMailMessage();
 //        // not mandatory however many servers require from prop
 //        message.setFrom(originmail);
