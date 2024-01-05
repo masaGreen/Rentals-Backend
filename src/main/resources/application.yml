@@ -1,5 +1,6 @@
 server:
   port: 8080
+
 spring:
   application:
     name: Rental-Unit-Management
@@ -13,7 +14,6 @@ spring:
     hibernate:
       ddl-auto: update
 
-
 logging:
   level:
     org.springframework.security: INFO
@@ -26,24 +26,19 @@ logging:
 jwt:
   secret: ${JWT_SECRET}
 
-
 springdoc:
   swagger-ui:
-    tagsSorter=alpha:
+    tagsSorter: alpha
 
 mail:
-#  host: smtp.gmail.com
-#  port: ${MAIL_PORT}
-#  origin: ${MAIL_USERNAME}
   origin:
-#  password: ${MAIL_PASSWORD}
-  properties:
-    mail:
-      smtp:
-        auth: true
-        starttls:
-          enable: true
-
-
-
-
+#    host:
+#    port:
+#    origin:
+#    password:
+#    properties:
+#      mail:
+#        smtp:
+#          auth: true
+#          starttls:
+#            enable: true

@@ -1,0 +1,44 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: Rental-Unit-Management
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driverClassName: org.h2.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+
+logging:
+  level:
+    org.springframework.security: INFO
+    root: INFO
+    org:
+      springframework:
+      web:
+        servlet:
+        org.springframework.web.servlet.DispatcherServlet: INFO
+jwt:
+  secret: ${JWT_SECRET}
+
+springdoc:
+  swagger-ui:
+    tagsSorter: alpha
+
+mail:
+  origin:
+#    host:
+#    port:
+#    origin:
+#    password:
+#    properties:
+#      mail:
+#        smtp:
+#          auth: true
+#          starttls:
+#            enable: true
