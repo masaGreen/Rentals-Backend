@@ -1,4 +1,4 @@
-package com.masagreen.RentalUnitsManagement.config;
+package com.masagreen.RentalUnitsManagement.security;
 
 import com.masagreen.RentalUnitsManagement.security.jwt.JwtAuthenticationEntryPoint;
 import com.masagreen.RentalUnitsManagement.security.jwt.JwtFilter;
