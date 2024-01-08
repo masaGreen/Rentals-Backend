@@ -38,7 +38,7 @@ public class TenantService {
     private final UnitRepository unitRepository;
 
     public TenantsResponseDto findAllTenants() {
-        List<TenantDTO> tenantDTOs = tenantRepository.findAll().stream().map(u -> new TenantDTO(u)).toList();
+        List<TenantDTO> tenantDTOs = tenantRepository.findAll().stream().map(TenantDTO::new).toList();
 
         return TenantsResponseDto.builder().tenants(tenantDTOs).build();
 

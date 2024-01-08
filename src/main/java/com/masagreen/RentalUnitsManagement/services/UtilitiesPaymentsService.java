@@ -79,7 +79,6 @@ public class UtilitiesPaymentsService {
             Double carriedForward = Double.parseDouble(utilsReqDto.amountPaid()) - (Double.parseDouble(
                     utilsReqDto.garbage()) + Double.parseDouble(utilsReqDto.waterBill()));
 
-            System.out.println(-20);
             String status = carriedForward >= 0 ? "paid" : "unpaid";
 
             UtilitiesPayments utilitiesPayments = UtilitiesPayments.builder()

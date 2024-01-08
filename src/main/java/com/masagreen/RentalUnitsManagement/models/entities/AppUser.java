@@ -36,10 +36,12 @@ public class AppUser extends SuperClass {
 
     @Override
     public boolean equals(Object obj) {
-        if(this == obj) return true;
-        if(obj == null || getClass() != obj.getClass()) return false;
-        return ((AppUser) obj).getId().equals(this.getId());
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
 
+        AppUser other = (AppUser) obj;
+        return Objects.equals(this.getId(), other.getId());
     }
+
 }
 

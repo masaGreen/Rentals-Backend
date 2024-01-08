@@ -7,14 +7,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class ChangePasswordReqDto {
-    @Size(min = 4, message = "must be longer than four characters")
-    private String oldPassword;
-    @Size(min = 4, message = "must be longer than four characters")
-    private String newPassword;
 
-}
+public record ChangePasswordReqDto (
+    @Size(min = 4, message = "must be longer than four characters")
+    String oldPassword,
+    @Size(min = 4, message = "must be longer than four characters")
+    String newPassword
+
+){}

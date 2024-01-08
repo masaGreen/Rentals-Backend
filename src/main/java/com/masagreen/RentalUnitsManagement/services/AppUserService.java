@@ -38,9 +38,9 @@ public class AppUserService {
     private final EmailService emailService;
 
 
-    public AppUser findAppUserByEmail(String email, String errorMessage) {
+    public AppUser findAppUserByEmail(String email) {
         return appUserRepository.findByEmail(email).orElseThrow(
-                () -> new EntityNotFoundException(errorMessage));
+                () -> new EntityNotFoundException("app-user not found"));
     }
 
     public SignUpResponseDto saveUser(SignUpReqDto signUpReqDto) {
@@ -51,13 +51,14 @@ public class AppUserService {
                     .password(passwordEncoder.encode(signUpReqDto.getPassword()))
                     //when admin approval feature is activated this should be false by default
                     .status(true)
-                    .validationCode(UUID.randomUUID().toString())
+                    .validationCode(UUID.randomUUID().toString().substring(2,7))
                     .role(signUpReqDto.getRole())
                     .isEmailValidated(false)
                     .build();
             AppUser savedUser = appUserRepository.save(user);
 
             //send mail with the validation code//this code should relinquish the thread
+
             //emailService.sendEmailValidationCode(savedUser.getEmail(), savedUser.getValidationCode());
 
             return SignUpResponseDto.builder().id(savedUser.getId()).email(savedUser.getEmail()).build();
@@ -67,7 +68,7 @@ public class AppUserService {
     }
 
     public CommonResponseMessageDto resendValidationCode(String email){
-        AppUser user = findAppUserByEmail(email, "user not found");
+        AppUser user = findAppUserByEmail(email);
         //resend code to mail
         //emailService.sendEmailValidationCode(user.getEmail(),user.getValidationCode());
         return  CommonResponseMessageDto.builder().message("validation code sent to email").build();
@@ -78,7 +79,7 @@ public class AppUserService {
 
         //check if user exists else throw error and return
 
-        AppUser user = findAppUserByEmail(authReqBodyDto.email(), "email/password incorrect");
+        AppUser user = findAppUserByEmail(authReqBodyDto.email());
         //if(!user.isEmailValidated()) throw new UserNotValidatedException("user email not validated, validate first");
         boolean isPasswordMatch = passwordEncoder.matches(authReqBodyDto.password(), user.getPassword());
         //if password and emails match authenticate the user
@@ -116,8 +117,8 @@ public class AppUserService {
     }
 
     public CommonResponseMessageDto manageUserStatus(ApprovalDto approvalDto, HttpServletRequest request) {
-            AppUser loggedAdmin = findAppUserByEmail((String)request.getAttribute("email"), "Not found");
-            AppUser user = findAppUserByEmail(approvalDto.email(), "not found");
+            AppUser loggedAdmin = findAppUserByEmail((String)request.getAttribute("email"));
+            AppUser user = findAppUserByEmail(approvalDto.email());
             boolean status = user.isStatus();
             user.setStatus(!user.isStatus());
 
@@ -135,7 +136,7 @@ public class AppUserService {
     }
 
     public CommonResponseMessageDto handleForgotPassword(ForgotPasswordDTO forgotPasswordDTO) {
-        AppUser user = findAppUserByEmail(forgotPasswordDTO.email(), "email not found");
+        AppUser user = findAppUserByEmail(forgotPasswordDTO.email());
         String newPassword = UUID.randomUUID().toString().substring(0, 6);
         user.setPassword(passwordEncoder.encode(newPassword));
         appUserRepository.save(user);
@@ -149,12 +150,12 @@ public class AppUserService {
     public CommonResponseMessageDto handleChangePassword(ChangePasswordReqDto changePasswordReqDto, HttpServletRequest request) {
 
         //must be logged in
-        AppUser loggedUser = findAppUserByEmail((String) request.getAttribute("email"), "email user must be logged in");
+        AppUser loggedUser = findAppUserByEmail((String) request.getAttribute("email"));
 
 
-        if (passwordEncoder.matches(changePasswordReqDto.getOldPassword(), loggedUser.getPassword())) {
+        if (passwordEncoder.matches(changePasswordReqDto.oldPassword(), loggedUser.getPassword())) {
 
-            loggedUser.setPassword(passwordEncoder.encode(changePasswordReqDto.getNewPassword()));
+            loggedUser.setPassword(passwordEncoder.encode(changePasswordReqDto.newPassword()));
             appUserRepository.save(loggedUser);
 
             return CommonResponseMessageDto.builder().message("successfully changed your password").build();
